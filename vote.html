@@ -82,7 +82,17 @@ footer strong{color:#F0C040}
 
 <script>
 var logosData = [];
-var SHEET_URL = "https://script.google.com/macros/s/AKfycbwvaVyB7qSIZlYqeKiCEPPGGbtEeMP_vZw3CW3lJKpg5_pe85HYSVzQ7l6lFflBF6CQ/exec";
+  document.addEventListener('DOMContentLoaded', function(){
+  var el = document.getElementById('logos-data');
+  if(el){
+    logosData = JSON.parse(el.textContent);
+    logosData.forEach(function(l,i){ if(!s.votes[i]) s.votes[i]=0; });
+    renderGrid();
+    renderBars();
+    fetchResults();
+  }
+});
+var SHEET_URL = "https://script.google.com/macros/s/AKfycbwbCIzSANmp2M1ssRDQyhwuZtvwexijB0TqK0Zsu8cr1o7JYQQmXmxPGMLmLWQuXtyC/exec";
 var KEY = 'lib_v5';
 var s = JSON.parse(localStorage.getItem(KEY) || '{"votes":{},"myVote":null}');
 // init in DOMContentLoaded
@@ -174,14 +184,6 @@ function vote(i){
   renderGrid(); renderBars();
   document.querySelectorAll('.card')[i].scrollIntoView({behavior:'smooth', block:'center'});
 }
-
-document.addEventListener('DOMContentLoaded', function(){
-  var el = document.getElementById('logos-data');
-  logosData = JSON.parse(el.textContent);
-  // init in DOMContentLoaded
-  renderGrid();
-  renderBars();
-  fetchResults();
 });
 </script>
 
