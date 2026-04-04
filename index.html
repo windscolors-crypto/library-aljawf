@@ -465,6 +465,10 @@ footer {
     box-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 </style>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -525,16 +529,16 @@ footer {
 <div class="stats-bar reveal">
   <div class="stats-inner">
     <div class="stat-item">
-      <div class="stat-num">+٥٠٠</div>
+      <div class="stat-num" id="statBooks" data-target="0">...</div>
       <div class="stat-label">كتاب ومرجع</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">٥</div>
-      <div class="stat-label">أعضاء اللجنة</div>
+      <div class="stat-num" id="statPeople" data-target="0">...</div>
+      <div class="stat-label">قارئة مسجلة</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">+٢٠</div>
-      <div class="stat-label">نشاط سنوياً</div>
+      <div class="stat-num" id="statBorrows" data-target="0">...</div>
+      <div class="stat-label">عملية إعارة</div>
     </div>
     <div class="stat-item">
       <div class="stat-num">يومياً</div>
@@ -737,6 +741,68 @@ var observer = new IntersectionObserver(function(entries){
   });
 }, { threshold: 0.12 });
 reveals.forEach(function(el){ observer.observe(el); });
+</script>
+
+<script>
+// ===== Firebase Stats Auto-Update =====
+(async function() {
+    try {
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAoyAzOwKUNgGJ3H8kTp3RC56lVUXTnZs",
+            authDomain: "library-aljawf.firebaseapp.com",
+            projectId: "library-aljawf",
+            storageBucket: "library-aljawf.appspot.com",
+            messagingSenderId: "1098205579668",
+            appId: "1:1098205579668:web:f7a3d3b8c8e8f8a8"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Fetch counts from Firestore
+        const [itemsSnap, peopleSnap, historySnap] = await Promise.all([
+            db.collection('library_items').get(),
+            db.collection('people').get(),
+            db.collection('borrow_history').get()
+        ]);
+
+        const booksCount = itemsSnap.size;
+        const peopleCount = peopleSnap.size;
+        const borrowsCount = historySnap.size;
+
+        // Animate counting up
+        function animateCount(el, target) {
+            if (!el || target === 0) { if(el) el.textContent = '\u0660'; return; }
+            const duration = 1500;
+            const start = performance.now();
+            function toArabicNum(n) {
+                return n.toString().replace(/[0-9]/g, d => String.fromCharCode(0x0660 + parseInt(d)));
+            }
+            function step(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(ease * target);
+                el.textContent = toArabicNum(current);
+                if (progress < 1) requestAnimationFrame(step);
+                else el.textContent = toArabicNum(target);
+            }
+            requestAnimationFrame(step);
+        }
+
+        animateCount(document.getElementById('statBooks'), booksCount);
+        animateCount(document.getElementById('statPeople'), peopleCount);
+        animateCount(document.getElementById('statBorrows'), borrowsCount);
+
+    } catch(e) {
+        console.log('Stats error:', e);
+        // Fallback to static
+        var el1 = document.getElementById('statBooks');
+        if(el1) el1.textContent = '+\u0665\u0660\u0660';
+        var el2 = document.getElementById('statPeople');
+        if(el2) el2.textContent = '\u0665';
+        var el3 = document.getElementById('statBorrows');
+        if(el3) el3.textContent = '+\u0662\u0660';
+    }
+})();
 </script>
 </body>
 </html>
