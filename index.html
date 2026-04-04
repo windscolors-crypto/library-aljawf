@@ -433,9 +433,48 @@ footer {
 ══════════════════════════════ */
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== GLOBAL NAV BAR ===== */
+.global-nav {
+    background: linear-gradient(135deg, #1a5276 0%, #2e75b6 100%);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    direction: rtl;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.global-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+.global-nav a:hover {
+    background: rgba(255,255,255,0.2);
+}
+.global-nav a.active {
+    background: rgba(255,255,255,0.3);
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
 </style>
 </head>
 <body>
+
+<!-- ===== GLOBAL NAV ===== -->
+<nav class="global-nav">
+    <a href="index.html" class="active">الصفحة الرئيسية</a>
+    <a href="library-system.html">نظام المكتبة</a>
+    <a href="vote.html">التصويت</a>
+</nav>
+
 
 <div class="stars"></div>
 
