@@ -114,7 +114,7 @@ const votesRef = ref(db, "votes");
 
 const LOCAL_KEY = "library_vote_v2";
 
-function getMyVote() { return localStorage.getItem(LOCAL_KEY); }
+function getMyVote() { return null; }
 function setMyVote(id) { localStorage.setItem(LOCAL_KEY, String(id)); }
 
 function renderLogos(votes) {
