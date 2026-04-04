@@ -1586,6 +1586,7 @@ let isAdmin = false;
 
 // Day of week names in Arabic
 const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const holidayDays = [5, 6]; // Friday=5, Saturday=6 are holidays
 
 // Load items
 async function loadItems() {
@@ -1846,7 +1847,7 @@ function exportData() {
     link.download = 'library_data_' + new Date().toISOString().split('T')[0] + '.csv';
     link.click();
     showToast('تم تصدير البيانات بنجاح 📊', 'success');
-    recordScore(1, 'search');
+    // recordScore removed from export
 }
 
 // =================================================================
@@ -1890,6 +1891,8 @@ async function updateReaderOfMonth() {
 async function recordScore(points, action) {
     const now = new Date();
     const dayIndex = now.getDay();
+    // Skip holidays (Friday & Saturday)
+    if (holidayDays.includes(dayIndex)) return;
     const dayName = dayNames[dayIndex];
 
     const scoreEntry = {
@@ -1914,9 +1917,10 @@ async function recordScore(points, action) {
 }
 
 function updateDailyScores() {
-    // Calculate points by day
+    // Calculate points by day (skip holidays)
     const dayScores = {};
     dayNames.forEach((day, idx) => {
+        if (holidayDays.includes(idx)) return; // Skip Friday & Saturday
         dayScores[idx] = { name: day, points: 0 };
     });
 
@@ -2115,7 +2119,7 @@ function performSearch() {
         return matchQuery && matchType && matchCategory && matchStatus;
     });
 
-    recordScore(1, 'search');
+    // recordScore removed - search should not add points
     renderResults(results, 'searchResults', 'noResults');
 }
 
@@ -2673,7 +2677,16 @@ function generateReports() {
 //  🛠️ UI HELPERS
 // =================================================================
 function showLoading(show) {
-    document.getElementById('loadingOverlay').classList.toggle('visible', show);
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+    overlay.classList.toggle('visible', show);
+    // Safety: auto-hide after 5 seconds to prevent stuck overlay
+    if (show) {
+        clearTimeout(window._loadingTimeout);
+        window._loadingTimeout = setTimeout(() => showLoading(false), 5000);
+    } else {
+        clearTimeout(window._loadingTimeout);
+    }
 }
 
 function showToast(message, type) {
