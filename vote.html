@@ -9,3 +9,183 @@
   :root { --navy:#1A3A6B; --blue:#2E75B6; --gold:#C9952A; --teal:#007B72; --light:#f0f4ff; }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Tajawal',sans-serif; background:linear-gradient(135deg,#f5f7ff,#e8f0fe 50%,#f0faf8); min-height:100vh; color:#1a1a2e; }
+
+  header { background:linear-gradient(135deg,var(--navy),#0d2347); padding:2rem 1.5rem 1.5rem; text-align:center; position:relative; overflow:hidden; }
+  header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 100%,rgba(201,149,42,.15),transparent 70%); }
+  header .school-name { font-size:.85rem; color:rgba(255,255,255,.65); margin-bottom:.5rem; }
+  header h1 { font-size:clamp(1.5rem,4vw,2rem); color:white; font-weight:800; margin-bottom:.4rem; }
+  header .slogan { font-size:.9rem; color:var(--gold); font-weight:500; }
+  .instruction-box { background:rgba(255,255,255,.08); border:1px solid rgba(201,149,42,.3); border-radius:12px; padding:.8rem 1.2rem; margin-top:1rem; font-size:.88rem; color:rgba(255,255,255,.85); line-height:1.6; }
+  .instruction-box strong { color:var(--gold); }
+
+  main { max-width:900px; margin:0 auto; padding:2rem 1rem 3rem; }
+
+  .logos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1.2rem; margin-bottom:2.5rem; }
+
+  .logo-card { background:white; border-radius:20px; padding:1.5rem 1rem 1rem; text-align:center; cursor:pointer; border:3px solid transparent; box-shadow:0 4px 20px rgba(0,0,0,.07); transition:all .3s ease; position:relative; overflow:hidden; }
+  .logo-card:hover { transform:translateY(-4px); box-shadow:0 8px 30px rgba(26,58,107,.15); border-color:var(--blue); }
+  .logo-card.selected { border-color:var(--gold); background:linear-gradient(135deg,#fffdf5,#fff8e6); box-shadow:0 8px 30px rgba(201,149,42,.25); }
+  .logo-card.selected::after { content:'✓ اخترتِ هذا'; position:absolute; top:10px; left:10px; background:var(--gold); color:white; font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+  .logo-card.disabled { pointer-events:none; opacity:.7; }
+  .logo-card img { width:160px; height:160px; object-fit:contain; margin-bottom:.8rem; transition:transform .3s; }
+  .logo-card:hover img { transform:scale(1.05); }
+  .logo-label { font-size:.85rem; font-weight:700; color:var(--navy); background:var(--light); display:inline-block; padding:3px 14px; border-radius:20px; margin-bottom:.7rem; }
+  .vote-btn { display:block; width:100%; padding:.55rem; background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; border:none; border-radius:10px; font-family:'Tajawal',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .25s; margin-top:.4rem; }
+  .vote-btn:hover { background:linear-gradient(135deg,var(--blue),var(--teal)); transform:scale(1.02); }
+  .vote-btn:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+
+  .results-section { background:white; border-radius:20px; padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,.07); margin-top:1rem; }
+  .results-section h2 { font-size:1.1rem; font-weight:800; color:var(--navy); margin-bottom:1.2rem; }
+  .result-row { display:flex; align-items:center; gap:.8rem; margin-bottom:.8rem; }
+  .result-label { font-size:.8rem; font-weight:700; color:var(--navy); min-width:65px; }
+  .bar-wrap { flex:1; background:#f0f4ff; border-radius:20px; height:24px; overflow:hidden; }
+  .bar-fill { height:100%; background:linear-gradient(90deg,var(--navy),var(--blue)); border-radius:20px; display:flex; align-items:center; justify-content:flex-end; padding-left:8px; font-size:.72rem; color:white; font-weight:700; transition:width .6s ease; }
+  .result-count { font-size:.8rem; font-weight:700; color:var(--gold); min-width:30px; text-align:left; }
+  .total-votes { text-align:center; margin-top:1rem; font-size:.85rem; color:#888; }
+  .total-votes span { font-weight:700; color:var(--navy); }
+
+  .status-bar { text-align:center; padding:.6rem; border-radius:10px; margin-bottom:1rem; font-size:.85rem; font-weight:600; display:none; }
+  .status-bar.loading { background:#e8f0fe; color:var(--blue); display:block; }
+  .status-bar.success { background:#e8f5f0; color:var(--teal); display:block; }
+  .status-bar.error { background:#feeee8; color:#c0392b; display:block; }
+
+  .success-banner { display:none; background:linear-gradient(135deg,var(--teal),#005a53); color:white; text-align:center; padding:1.2rem; border-radius:16px; margin-bottom:1.5rem; font-size:1rem; font-weight:700; }
+  .success-banner.show { display:block; }
+
+  footer { background:var(--navy); color:rgba(255,255,255,.6); text-align:center; padding:1.5rem; font-size:.8rem; margin-top:3rem; }
+  footer strong { color:var(--gold); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="school-name">مدرسة إناث الجوفة الإعدادية — لجنة المكتبة</div>
+  <h1>📚 اختاري شعار مكتبتنا</h1>
+  <div class="slogan">✨ المكتبة... حيث يبدأ المستقبل ✨</div>
+  <div class="instruction-box">
+    اضغطي على زر <strong>«صوّتي»</strong> تحت الشعار الذي يعجبكِ 🗳️<br>
+    <strong>صوت واحد لكل جهاز</strong> — لا يمكن تغييره بعد التصويت
+  </div>
+</header>
+
+<main>
+  <div class="success-banner" id="successBanner">🎉 تم تسجيل صوتك بنجاح! شكراً لمشاركتك</div>
+  <div class="status-bar loading" id="statusBar">⏳ جاري تحميل البيانات...</div>
+  <div class="logos-grid" id="logosGrid"></div>
+  <div class="results-section">
+    <h2>📊 نتائج التصويت المباشر</h2>
+    <div id="resultsContainer"></div>
+    <div class="total-votes">إجمالي الأصوات: <span id="totalVotes">0</span></div>
+  </div>
+  <div style="text-align:center;margin-top:2rem">
+    <a href="#" onclick="resetVote()" style="color:#ddd;text-decoration:none;font-size:.7rem;">↺</a>
+  </div>
+</main>
+
+<footer>
+  <strong>📚 مكتبة إناث الجوفة الإعدادية</strong><br>
+  أمينة المكتبة: ريم توفيق · مديرة المدرسة: رانيا الخطيب<br>
+  جميع الحقوق محفوظة © ٢٠٢٥
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBAoyAzOwKUNgGJ3H8kTp3RC56lVUXTnZs",
+  authDomain: "library-aljawf.firebaseapp.com",
+  databaseURL: "https://library-aljawf-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "library-aljawf",
+  storageBucket: "library-aljawf.firebasestorage.app",
+  messagingSenderId: "483635945368",
+  appId: "1:483635945368:web:f721b784b7c9d2b93d15ed"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const LOCAL_KEY = "library_vote_v2";
+
+const LOGOS = [
+  { id:1,  label:"شعار ١",  img:"logo1.png" },
+  { id:2,  label:"شعار ٢",  img:"logo2.png" },
+  { id:3,  label:"شعار ٣",  img:"logo3.png" },
+  { id:4,  label:"شعار ٤",  img:"logo4.png" },
+  { id:5,  label:"شعار ٥",  img:"logo5.png" },
+  { id:6,  label:"شعار ٦",  img:"logo6.png" },
+  { id:7,  label:"شعار ٧",  img:"logo7.png" },
+  { id:8,  label:"شعار ٨",  img:"logo8.png" },
+  { id:9,  label:"شعار ٩",  img:"logo9.png" },
+  { id:10, label:"شعار ١٠", img:"logo10.png" },
+  { id:11, label:"شعار ١١", img:"logo11.png" },
+  { id:12, label:"شعار ١٢", img:"logo12.jpg" },
+];
+
+function getMyVote() { return localStorage.getItem(LOCAL_KEY); }
+function setMyVote(id) { localStorage.setItem(LOCAL_KEY, String(id)); }
+
+function renderLogos(votes) {
+  const myVote = getMyVote();
+  const voted  = !!myVote;
+  const grid   = document.getElementById("logosGrid");
+  grid.innerHTML = "";
+  LOGOS.forEach(logo => {
+    const card = document.createElement("div");
+    card.className = "logo-card" + (myVote==logo.id ? " selected" : "") + (voted ? " disabled" : "");
+    card.innerHTML = `
+      <div class="logo-label">${logo.label}</div>
+      <img src="${logo.img}" alt="${logo.label}" loading="lazy">
+      <button class="vote-btn" onclick="window.castVote(${logo.id})" ${voted?"disabled":""}>
+        ${voted ? (myVote==logo.id ? "✓ صوتك" : "تم التصويت") : "🗳️ صوّتي لهذا"}
+      </button>`;
+    grid.appendChild(card);
+  });
+}
+
+function renderResults(votes) {
+  const total = Object.values(votes||{}).reduce((a,b)=>a+b,0);
+  document.getElementById("totalVotes").textContent = total||"0";
+  const c = document.getElementById("resultsContainer");
+  c.innerHTML = "";
+  [...LOGOS].sort((a,b)=>(votes?.[b.id]||0)-(votes?.[a.id]||0)).forEach(logo => {
+    const count = votes?.[logo.id]||0;
+    const pct   = total>0 ? Math.round(count/total*100) : 0;
+    c.innerHTML += `<div class="result-row">
+      <div class="result-label">${logo.label}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%">${pct>10?pct+"%":""}</div></div>
+      <div class="result-count">${count}</div>
+    </div>`;
+  });
+}
+
+const votesRef = ref(db, "votes");
+onValue(votesRef, snap => {
+  document.getElementById("statusBar").style.display = "none";
+  renderLogos(snap.val()||{});
+  renderResults(snap.val()||{});
+});
+
+window.castVote = async function(id) {
+  if (getMyVote()) return;
+  const sb = document.getElementById("statusBar");
+  sb.className = "status-bar loading"; sb.textContent = "⏳ جاري تسجيل صوتك...";
+  try {
+    await runTransaction(ref(db,"votes/"+id), cur => (cur||0)+1);
+    setMyVote(id);
+    sb.className = "status-bar success"; sb.textContent = "✅ تم تسجيل صوتك!";
+    document.getElementById("successBanner").classList.add("show");
+    setTimeout(()=>sb.style.display="none", 3000);
+  } catch(e) {
+    sb.className = "status-bar error"; sb.textContent = "❌ حدث خطأ، حاولي مرة أخرى";
+  }
+};
+
+window.resetVote = function() {
+  if (prompt("كلمة المرور:") === "aljawf2025") {
+    localStorage.removeItem(LOCAL_KEY);
+    location.reload();
+  }
+};
+</script>
+</body>
+</html>
