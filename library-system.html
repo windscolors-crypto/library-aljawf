@@ -1359,6 +1359,7 @@
                 <button class="btn btn-teal" onclick="showBorrowForm()">📤 تسجيل استعارة</button>
                 <button class="btn btn-gold" onclick="showReturnForm()">📥 تسجيل إرجاع</button>
                 <button class="btn btn-outline librarian-only" onclick="showNamesModal()">📝 إدارة الأسماء</button>
+                <button class="btn btn-outline librarian-only" onclick="showRotation()">🗓️ المناوبة</button>
                 <button class="btn btn-outline librarian-only" onclick="exportData()">📊 تصدير البيانات</button>
                 <button class="btn btn-outline" onclick="adminLogout()">🚪 خروج</button>
             </div>
@@ -1472,6 +1473,18 @@
                 <div class="form-actions">
                     <button class="btn btn-gold" onclick="processReturn()">✅ تأكيد الإرجاع</button>
                     <button class="btn btn-outline" onclick="hideReturnForm()">إلغاء</button>
+                </div>
+            </div>
+
+            <!-- Duty Rotation & Attendance (librarian only) -->
+            <div class="form-section" id="rotationSection">
+                <h3>🗓️ جدول المناوبة والحضور</h3>
+                <p style="color: var(--gray); font-size: 13px; margin-bottom: 12px;">
+                    وزّعي طالبات اللجنة على أيام الأسبوع، وسجّلي حضورهنّ. <strong id="rotationToday"></strong>
+                </p>
+                <div id="rotationGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px;"></div>
+                <div class="form-actions" style="margin-top:14px;">
+                    <button class="btn btn-outline" onclick="hideRotation()">إغلاق</button>
                 </div>
             </div>
 
@@ -2339,6 +2352,108 @@ function showReturnForm() {
 
 function hideReturnForm() {
     document.getElementById('returnForm').classList.remove('visible');
+}
+
+// =================================================================
+//  🗓️ DUTY ROTATION & ATTENDANCE  (librarian only)
+//  المناوبة: الأحد–الخميس + تسجيل حضور/غياب يومي
+// =================================================================
+const ROSTER_COLLECTION = 'duty_roster';
+const ATTENDANCE_COLLECTION = 'duty_attendance';
+let allRoster = [];
+let allAttendance = [];
+const schoolDays = [0, 1, 2, 3, 4]; // الأحد .. الخميس
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function todayDow() { return new Date().getDay(); } // 0 = الأحد
+function escAttr(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+async function loadRotation() {
+    if (!useFirebase) { allRoster = []; allAttendance = []; return; }
+    try {
+        const rs = await db.collection(ROSTER_COLLECTION).get();
+        allRoster = rs.docs.map(d => ({ id: d.id, ...d.data() }));
+        const at = await db.collection(ATTENDANCE_COLLECTION).where('date', '==', todayStr()).get();
+        allAttendance = at.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) { console.error('rotation load error:', e); }
+}
+
+function showRotation() {
+    if (userRole !== 'librarian') { showToast('المناوبة متاحة لأمينة المكتبة فقط', 'error'); return; }
+    hideAddForm(); hideBorrowForm(); hideReturnForm();
+    document.getElementById('rotationSection').classList.add('visible');
+    document.getElementById('rotationToday').textContent = 'اليوم: ' + dayNames[todayDow()] + ' — ' + todayStr();
+    document.getElementById('rotationGrid').innerHTML = '<p style="color:var(--gray);">جارٍ التحميل…</p>';
+    loadRotation().then(renderRotation);
+}
+
+function hideRotation() {
+    document.getElementById('rotationSection').classList.remove('visible');
+}
+
+function renderRotation() {
+    const grid = document.getElementById('rotationGrid');
+    if (!grid) return;
+    const tdow = todayDow();
+    grid.innerHTML = schoolDays.map(function (day) {
+        const members = allRoster.filter(m => m.day === day)
+            .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+        const isToday = (day === tdow);
+        const rows = members.length ? members.map(function (m) {
+            const att = allAttendance.find(a => a.name === m.name && a.day === day);
+            const st = att ? att.status : null;
+            const present = '<button class="btn btn-sm ' + (st === 'present' ? 'btn-teal' : 'btn-outline') + '" title="حاضرة" onclick="setAttendance(' + day + ',\'' + escAttr(m.name) + '\',\'present\')">✅</button>';
+            const absent = '<button class="btn btn-sm ' + (st === 'absent' ? 'btn-danger' : 'btn-outline') + '" title="غائبة" onclick="setAttendance(' + day + ',\'' + escAttr(m.name) + '\',\'absent\')">❌</button>';
+            const tag = st === 'absent' ? ' <span style="color:var(--red,#c0392b);font-size:11px;">(غائبة)</span>' : (st === 'present' ? ' <span style="color:var(--teal,#007B72);font-size:11px;">(حاضرة)</span>' : '');
+            return '<li style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid #eee;">' +
+                '<span style="font-size:13px;">' + m.name + tag + '</span>' +
+                '<span style="display:flex;gap:3px;white-space:nowrap;">' + (isToday ? present + absent : '') +
+                '<button class="btn btn-sm btn-outline" title="إزالة من القائمة" onclick="removeRosterMember(\'' + m.id + '\')">✕</button></span></li>';
+        }).join('') : '<li style="color:var(--gray);font-size:12px;padding:6px 0;">لا توجد طالبات بعد</li>';
+        return '<div style="border:1px solid ' + (isToday ? 'var(--teal,#007B72)' : '#ddd') + ';border-radius:12px;padding:12px;background:' + (isToday ? '#f0fbfa' : '#fff') + ';">' +
+            '<h4 style="margin:0 0 8px;color:var(--navy,#1A3A6B);">' + dayNames[day] + (isToday ? ' ⭐ اليوم' : '') + '</h4>' +
+            '<ul style="list-style:none;padding:0;margin:0 0 8px;">' + rows + '</ul>' +
+            '<div style="display:flex;gap:4px;">' +
+            '<input id="rosterInput-' + day + '" placeholder="اسم الطالبة" style="flex:1;min-width:0;padding:6px;border:1px solid #ccc;border-radius:8px;font-family:inherit;" onkeypress="if(event.key===\'Enter\') addRosterMember(' + day + ')">' +
+            '<button class="btn btn-sm btn-primary" onclick="addRosterMember(' + day + ')">➕</button>' +
+            '</div></div>';
+    }).join('');
+}
+
+async function addRosterMember(day) {
+    if (userRole !== 'librarian') { showToast('للأمينة فقط', 'error'); return; }
+    const input = document.getElementById('rosterInput-' + day);
+    const name = (input && input.value || '').trim();
+    if (!name) { showToast('اكتبي اسم الطالبة', 'error'); return; }
+    try {
+        if (useFirebase) await db.collection(ROSTER_COLLECTION).add({ name: name, day: day, createdAt: new Date().toISOString() });
+        showToast('تمت إضافة ' + name + ' ليوم ' + dayNames[day], 'success');
+        if (input) input.value = '';
+        await loadRotation(); renderRotation();
+    } catch (e) { showToast('تعذّرت الإضافة', 'error'); }
+}
+
+async function removeRosterMember(id) {
+    if (userRole !== 'librarian') { showToast('للأمينة فقط', 'error'); return; }
+    try {
+        if (useFirebase) await db.collection(ROSTER_COLLECTION).doc(id).delete();
+        await loadRotation(); renderRotation();
+        showToast('تمت الإزالة', 'success');
+    } catch (e) { showToast('تعذّر الحذف', 'error'); }
+}
+
+async function setAttendance(day, name, status) {
+    if (userRole !== 'librarian') { showToast('للأمينة فقط', 'error'); return; }
+    day = parseInt(day, 10);
+    try {
+        const existing = allAttendance.find(a => a.name === name && a.day === day);
+        if (useFirebase) {
+            if (existing) await db.collection(ATTENDANCE_COLLECTION).doc(existing.id).update({ status: status, ts: new Date().toISOString() });
+            else await db.collection(ATTENDANCE_COLLECTION).add({ name: name, day: day, date: todayStr(), status: status, ts: new Date().toISOString() });
+        }
+        await loadRotation(); renderRotation();
+        showToast((status === 'present' ? 'حاضرة: ' : 'غائبة: ') + name, 'success');
+    } catch (e) { showToast('تعذّر تسجيل الحضور', 'error'); }
 }
 
 // =================================================================
