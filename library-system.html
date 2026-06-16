@@ -1342,12 +1342,13 @@
         <!-- Login -->
         <div id="adminLogin" class="login-section">
             <h2>🔐 لوحة الإدارة</h2>
-            <p>خاصة بأمينة المكتبة ولجنة المكتبة</p>
-            <input type="password" class="login-input" id="adminPassword" placeholder="كلمة المرور" onkeypress="if(event.key==='Enter') adminLogin()">
+            <p>اختاري نوع الدخول ثمّ أدخلي كلمة المرور</p>
+            <input type="password" class="login-input" id="adminPassword" placeholder="كلمة المرور" onkeypress="if(event.key==='Enter') adminLogin('librarian')">
             <br>
-            <button class="btn btn-primary" onclick="adminLogin()">دخول</button>
+            <button class="btn btn-primary" onclick="adminLogin('librarian')">🔐 دخول الأمينة</button>
+            <button class="btn btn-teal" onclick="adminLogin('committee')">👭 دخول اللجنة</button>
             <p style="margin-top: 16px; font-size: 12px; color: var(--gray);">
-                كلمة المرور الافتراضية: <strong>maktaba2026</strong>
+                الأمينة: كلّ الصلاحيات • اللجنة: إضافة الكتب وتسجيل الاستعارة فقط
             </p>
         </div>
 
@@ -1357,8 +1358,8 @@
                 <button class="btn btn-primary" onclick="showAddForm()">➕ إضافة مادة جديدة</button>
                 <button class="btn btn-teal" onclick="showBorrowForm()">📤 تسجيل استعارة</button>
                 <button class="btn btn-gold" onclick="showReturnForm()">📥 تسجيل إرجاع</button>
-                <button class="btn btn-outline" onclick="showNamesModal()">📝 إدارة الأسماء</button>
-                <button class="btn btn-outline" onclick="exportData()">📊 تصدير البيانات</button>
+                <button class="btn btn-outline librarian-only" onclick="showNamesModal()">📝 إدارة الأسماء</button>
+                <button class="btn btn-outline librarian-only" onclick="exportData()">📊 تصدير البيانات</button>
                 <button class="btn btn-outline" onclick="adminLogout()">🚪 خروج</button>
             </div>
 
@@ -1574,7 +1575,9 @@ const COLLECTION = 'library_items';
 const HISTORY_COLLECTION = 'borrow_history';
 const PEOPLE_COLLECTION = 'people';
 const SCORES_COLLECTION = 'daily_scores';
-const ADMIN_PASSWORD = 'maktaba2026';
+const ADMIN_PASSWORD = 'maktaba2026';        // أمينة المكتبة — صلاحية كاملة
+const COMMITTEE_PASSWORD = 'lojnah2026';     // لجنة الطالبات — إضافة واستعارة فقط
+let userRole = null;                         // 'librarian' | 'committee'
 let allItems = [];
 let allHistory = [];
 let allPeople = [];
@@ -1687,6 +1690,7 @@ async function saveItem() {
 
 // Delete item
 async function deleteItem(id) {
+    if (userRole !== 'librarian') { showToast('الحذف متاح لأمينة المكتبة فقط', 'error'); return; }
     showModal('حذف المادة', 'هل أنتِ متأكدة من حذف هذه المادة؟ لا يمكن التراجع.', async () => {
         showLoading(true);
         try {
@@ -1836,7 +1840,7 @@ function exportData() {
         item.borrowerType, item.borrowerClass, item.borrowDate, item.notes
     ]);
 
-    let csv = '\uFEFF' + headers.join(',') + '\n';
+    let csv = '﻿' + headers.join(',') + '\n';
     rows.forEach(row => {
         csv += row.map(cell => '"' + (cell || '').toString().replace(/"/g, '""') + '"').join(',') + '\n';
     });
@@ -2183,21 +2187,36 @@ function updateStats() {
 // =================================================================
 //  🔐 ADMIN
 // =================================================================
-function adminLogin() {
+function adminLogin(role) {
+    role = role || 'librarian';
     const pwd = document.getElementById('adminPassword').value;
-    if (pwd === ADMIN_PASSWORD) {
+    const expected = (role === 'committee') ? COMMITTEE_PASSWORD : LIBRARIAN_PASSWORD_OR_ADMIN();
+    if (pwd === expected) {
+        userRole = role;
         isAdmin = true;
         document.getElementById('adminLogin').style.display = 'none';
         document.getElementById('adminPanel').classList.add('visible');
+        applyRolePermissions();
         updateAdminTable();
-        showToast('تم تسجيل الدخول بنجاح 🔓', 'success');
+        showToast(role === 'committee' ? 'أهلاً لجنة المكتبة 👭' : 'أهلاً أمينة المكتبة 🔓', 'success');
     } else {
         showToast('كلمة المرور غير صحيحة', 'error');
     }
 }
 
+// الأمينة تستخدم كلمة maktaba2026 (ADMIN_PASSWORD)
+function LIBRARIAN_PASSWORD_OR_ADMIN() { return ADMIN_PASSWORD; }
+
+// إظهار/إخفاء الأزرار الخاصة بالأمينة فقط حسب الدور
+function applyRolePermissions() {
+    document.querySelectorAll('.librarian-only').forEach(function (el) {
+        el.style.display = (userRole === 'librarian') ? '' : 'none';
+    });
+}
+
 function adminLogout() {
     isAdmin = false;
+    userRole = null;
     document.getElementById('adminLogin').style.display = 'block';
     document.getElementById('adminPanel').classList.remove('visible');
     document.getElementById('adminPassword').value = '';
@@ -2229,8 +2248,10 @@ function updateAdminTable() {
             '<td>' + (item.borrower || '—') + '</td>' +
             '<td>' + (item.borrowerType || '—') + '</td>' +
             '<td><div class="action-btns">' +
-                '<button class="btn btn-sm btn-outline" onclick="editItem(\'' + item.id + '\')">✏️</button>' +
-                '<button class="btn btn-sm btn-danger" onclick="deleteItem(\'' + item.id + '\')">🗑️</button>' +
+                (userRole === 'librarian'
+                    ? '<button class="btn btn-sm btn-outline" onclick="editItem(\'' + item.id + '\')">✏️</button>' +
+                      '<button class="btn btn-sm btn-danger" onclick="deleteItem(\'' + item.id + '\')">🗑️</button>'
+                    : '<span style="color:var(--gray); font-size:12px;">للأمينة فقط</span>') +
             '</div></td>' +
         '</tr>';
     }).join('');
@@ -2264,6 +2285,7 @@ function clearForm() {
 }
 
 function editItem(id) {
+    if (userRole !== 'librarian') { showToast('التعديل متاح لأمينة المكتبة فقط', 'error'); return; }
     const item = allItems.find(i => i.id === id);
     if (!item) return;
 
