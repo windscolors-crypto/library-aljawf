@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حجز المكتبة – مدرسة إناث الجوفة الإعدادية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Amiri:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2430; --muted:#5F6B7A; --paper:#F4F6FA; --card:#FFFFFF;
+    --shelf:#1A3A6B; --shelf-soft:#E4ECF7; --stamp:#007B72; --gold:#C9952A; --line:#D6DDE8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Tajawal",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 48px}
+  header{border-bottom:3px solid var(--gold);padding-bottom:16px;margin-bottom:22px}
+  .school{font-size:.95rem;color:var(--muted);margin:0}
+  h1{font-size:1.25rem;margin:2px 0 14px;font-weight:700}
+  .today{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .dayname{font-size:2.6rem;font-weight:700;color:var(--shelf);line-height:1.1}
+  .datestr{font-size:1.1rem;color:var(--ink)}
+  .src{font-size:.8rem;color:var(--muted);margin-top:4px}
+  .slogan{font-family:"Amiri",serif;font-size:1.15rem;color:var(--gold);margin:8px 0 0}
+  .banner{background:#FFF4E0;border:1px solid #E9C98A;padding:10px 12px;border-radius:6px;font-size:.9rem;margin-bottom:18px}
+  .banner.closed{background:#F7E6E8;border-color:#D9A2A9}
+  form{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+  .step{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;margin-bottom:16px}
+  .num{width:30px;height:30px;border-radius:50%;background:var(--shelf-soft);color:var(--shelf);display:grid;place-items:center;font-weight:700}
+  label{display:block;font-weight:500;margin-bottom:4px}
+  select{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  select:disabled{background:#EEF1F0;color:#9AA3AC}
+  select:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button{width:100%;font:inherit;font-weight:700;padding:12px;border:0;border-radius:6px;background:#2E75B6;color:#fff;cursor:pointer}
+  button:disabled{background:#A9BCD6;cursor:not-allowed}
+  .msg{margin-top:12px;font-size:.95rem;min-height:1.4em}
+  .msg.ok{color:#007B72} .msg.err{color:#B3261E}
+  h2{font-size:1.05rem;margin:28px 0 10px}
+  .slots{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+  .slots li{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);align-items:center}
+  .p{font-weight:500}
+  .free{color:var(--muted)}
+  .booked{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+  .stamp{border:2px solid var(--stamp);color:var(--stamp);font-weight:700;font-size:.8rem;padding:0 8px;border-radius:4px;transform:rotate(-4deg);display:inline-block}
+  .stamp.new{animation:press .35s ease-out}
+  @keyframes press{from{transform:scale(1.6) rotate(-12deg);opacity:0}to{transform:rotate(-4deg);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.stamp.new{animation:none}}
+
+  /* ===== التبويبات ===== */
+  .tabs{display:flex;gap:8px;margin-bottom:18px}
+  .tab{width:auto;flex:1;padding:10px;background:#fff;color:var(--shelf);border:1px solid var(--line);font-weight:500}
+  .tab[aria-current="true"]{background:var(--shelf);color:#fff;border-color:var(--shelf);font-weight:700}
+
+  /* ===== الإلغاء ===== */
+  .cancel{width:auto;padding:4px 12px;font-size:.8rem;font-weight:500;background:#fff;color:#B3261E;border:1px solid #E0B4B0}
+  .cancel:hover{background:#FBEDEC}
+
+  /* ===== التقرير ===== */
+  .filters{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:18px}
+  .range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  input[type="date"]{width:100%;font:inherit;padding:9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .quick button{width:auto;flex:1;min-width:90px;padding:7px 10px;font-size:.85rem;font-weight:500;background:var(--shelf-soft);color:var(--shelf)}
+  .printbtn{background:var(--stamp)}
+  .sumgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px}
+  .sumcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center}
+  .sumcard .n{font-size:1.7rem;font-weight:700;color:var(--shelf);line-height:1.2}
+  .sumcard .l{font-size:.82rem;color:var(--muted)}
+  .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{background:var(--shelf-soft);color:var(--shelf);font-weight:700}
+  tr:last-child td{border-bottom:0}
+  .bar{height:8px;background:var(--shelf);border-radius:4px;min-width:3px;display:inline-block;vertical-align:middle}
+  .empty{color:var(--muted);text-align:center;padding:24px}
+  .printhead{display:none}
+
+  /* ===== الطباعة ===== */
+  @media print{
+    @page{size:A4;margin:14mm}
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    header,.tabs,.filters,#view-book{display:none !important}
+    .printhead{display:block;border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:16px}
+    .printhead .t{font-size:1.2rem;font-weight:700;margin:0}
+    .printhead .s{font-size:.9rem;color:var(--muted);margin:2px 0 0}
+    h2{margin:18px 0 8px;page-break-after:avoid}
+    .tablewrap{border:0;overflow:visible}
+    table{font-size:.82rem}
+    th{background:#EEF2F8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    tr{page-break-inside:avoid}
+    .sumgrid{grid-template-columns:repeat(4,1fr)}
+    .bar{background:#1A3A6B !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="school">مدرسة إناث الجوفة الإعدادية – مكتبة المدرسة</p>
+    <h1>حجز المكتبة لليوم</h1>
+    <div class="today">
+      <span class="dayname" id="dayName">…</span>
+      <span class="datestr" id="dateStr">جارٍ جلب التاريخ</span>
+    </div>
+    <div class="src" id="timeSrc"></div>
+    <p class="slogan">📚 المكتبة... حيث يبدأ المستقبل ✨</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab" type="button" data-view="book" aria-current="true">الحجز</button>
+    <button class="tab" type="button" data-view="report" aria-current="false">التقرير</button>
+  </nav>
+
+  <!-- ══════════ الحجز ══════════ -->
+  <section id="view-book">
+    <div id="banner"></div>
+
+    <form id="bookForm" novalidate>
+      <div class="step"><span class="num">1</span><div>
+        <label for="teacher">اسم المعلمة</label>
+        <select id="teacher" required><option value="">اختاري اسمك</option></select>
+      </div></div>
+      <div class="step"><span class="num">2</span><div>
+        <label for="period">الحصة</label>
+        <select id="period" required disabled><option value="">اختاري الحصة</option></select>
+      </div></div>
+      <div class="step"><span class="num">3</span><div>
+        <label for="klass">الصف والشعبة</label>
+        <select id="klass" required disabled><option value="">اختاري الصف</option></select>
+      </div></div>
+      <button type="submit" id="submitBtn" disabled>احجزي المكتبة</button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </form>
+
+    <h2>جدول المكتبة اليوم</h2>
+    <ul class="slots" id="slots"></ul>
+  </section>
+
+  <!-- ══════════ التقرير ══════════ -->
+  <section id="view-report" hidden>
+    <div class="filters">
+      <div class="range">
+        <div><label for="from">من تاريخ</label><input type="date" id="from"></div>
+        <div><label for="to">إلى تاريخ</label><input type="date" id="to"></div>
+      </div>
+      <div class="quick">
+        <button type="button" data-q="month">هذا الشهر</button>
+        <button type="button" data-q="prev">الشهر الماضي</button>
+        <button type="button" data-q="all">كل السجل</button>
+      </div>
+      <button type="button" class="printbtn" id="printBtn">🖨️ اطبعي التقرير</button>
+      <div class="msg" id="repMsg" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="printhead">
+      <p class="t">تقرير حجز المكتبة – مدرسة إناث الجوفة الإعدادية</p>
+      <p class="s" id="printRange"></p>
+    </div>
+
+    <div class="sumgrid" id="repSummary"></div>
+
+    <h2>تفصيل الحجوزات</h2>
+    <div class="tablewrap"><table id="repTable"></table></div>
+
+    <h2>حسب المعلّمة</h2>
+    <div class="tablewrap"><table id="repTeachers"></table></div>
+
+    <h2>حسب الصف</h2>
+    <div class="tablewrap"><table id="repClasses"></table></div>
+  </section>
+</div>
+
+<script type="module">
+/* ================== الإعدادات: عدّليها ================== */
+const TEACHERS = [
+  "رنا عناية","سمر دودين","علا ابو رميلة","غادة مصطفى","حنان الشريقي",
+  "عبير حدوش","خديجة نجم","تسنيم جبر","هلا الخراز","هبة سامي",
+  "ايات محمود","بيان الشايب","هيا الطحلة","ناريمان ابو شاور","بثينة جمال",
+  "رؤى العدوي","اسماء السيد","عزة قشلان","ريم توفيق","سارة مصلح"
+].sort((a,b)=>a.localeCompare(b,"ar"));
+const PERIODS  = ["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة"];
+const CLASSES  = [
+  "سادس أ","سادس ب",
+  "سابع أ","سابع ب","سابع ج",
+  "ثامن أ","ثامن ب","ثامن ج",
+  "تاسع أ","تاسع ب","تاسع ج",
+  "عاشر أ","عاشر ب"
+];
+const COLLECTION = "bookings_34zqrelo"; // اسم غير قابل للتخمين
+const WEEKEND  = [5, 6]; // الجمعة=5، السبت=6 (0=الأحد)
+const CANCEL_HOURS = 12; // مهلة الإلغاء بعد الحجز — يجب أن تطابق قواعد Firestore
+
+// من Firebase Console ← library-aljawf ← Project settings ← Your apps (Web)
+const firebaseConfig = {
+  apiKey: "AIzaSyBAoyAzOwKUNgGJ3H8kTp3RC56lVUXTnZs",
+  authDomain: "library-aljawf.firebaseapp.com",
+  projectId: "library-aljawf",
+  storageBucket: "library-aljawf.firebasestorage.app",
+  messagingSenderId: "483635945368",
+  appId: "1:483635945368:web:f721b784b7c9d2b93d15ed"
+};
+/* ======================================================== */
+
+const DAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const $ = id => document.getElementById(id);
+const teacherSel = $("teacher"), periodSel = $("period"), klassSel = $("klass"), btn = $("submitBtn"), msg = $("msg");
+
+let today = null;          // "YYYY-MM-DD"
+let bookings = {};         // period -> {teacher, className, createdAt}
+let justBooked = null;
+let db = null, fs = null;
+const DEMO = !firebaseConfig.projectId;
+const demoStore = {};
+
+/* ---------- التاريخ من الإنترنت (توقيت عمّان) ---------- */
+async function getAmmanDate(){
+  try{
+    const r = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Amman", {cache:"no-store"});
+    if(!r.ok) throw 0;
+    const t = await r.json();
+    const dow = DAYS.indexOf({Sunday:"الأحد",Monday:"الإثنين",Tuesday:"الثلاثاء",Wednesday:"الأربعاء",Thursday:"الخميس",Friday:"الجمعة",Saturday:"السبت"}[t.dayOfWeek]);
+    return {y:t.year, m:t.month, d:t.day, dow, src:"التاريخ من الإنترنت (توقيت عمّان)"};
+  }catch{
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Amman",year:"numeric",month:"2-digit",day:"2-digit",weekday:"short"})
+      .formatToParts(new Date()).map(p=>[p.type,p.value]));
+    const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(parts.weekday);
+    return {y:+parts.year, m:+parts.month, d:+parts.day, dow, src:"تعذّر الاتصال بخادم الوقت؛ التاريخ من ساعة الجهاز"};
+  }
+}
+
+/* ---------- Firebase ---------- */
+async function initDB(){
+  if(DEMO){
+    $("banner").innerHTML = `<div class="banner">وضع تجريبي: إعدادات Firebase فارغة، والحجوزات لا تُحفظ ولا تراها بقية المعلمات.</div>`;
+    return;
+  }
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  db = fs.getFirestore(appMod.initializeApp(firebaseConfig));
+}
+
+function listen(){
+  if(DEMO){ bookings = {...demoStore}; render(); return; }
+  const q = fs.query(fs.collection(db,COLLECTION), fs.where("date","==",today));
+  fs.onSnapshot(q, snap=>{
+    bookings = {};
+    snap.forEach(doc=>{ const b = doc.data(); bookings[b.period] = b; });
+    render();
+  }, ()=>{ msg.className="msg err"; msg.textContent="تعذّر قراءة الحجوزات. تحقّقي من الاتصال أو قواعد Firestore."; });
+}
+
+async function book(period, teacher, className){
+  if(DEMO){
+    if(demoStore[period]) throw new Error("taken");
+    const now = Date.now();
+    demoStore[period] = {date:today, period, teacher, className, createdAt:{toMillis:()=>now, toDate:()=>new Date(now)}};
+    bookings = {...demoStore}; return;
+  }
+  const ref = fs.doc(db,COLLECTION,`${today}_p${period}`);
+  await fs.runTransaction(db, async tx=>{
+    const s = await tx.get(ref);
+    if(s.exists()) throw new Error("taken");
+    tx.set(ref,{date:today, period, teacher, className, createdAt:fs.serverTimestamp()});
+  });
+}
+
+async function cancel(period){
+  if(DEMO){ delete demoStore[period]; bookings = {...demoStore}; render(); return; }
+  await fs.deleteDoc(fs.doc(db,COLLECTION,`${today}_p${period}`));
+}
+
+/* مهلة الإلغاء: القواعد تفرضها على الخادم، وهذا الفحص لإخفاء الزر فقط */
+function canCancel(b){
+  if(!b || !b.createdAt || typeof b.createdAt.toMillis !== "function") return false;
+  return Date.now() - b.createdAt.toMillis() < CANCEL_HOURS*3600*1000;
+}
+
+/* ---------- الواجهة ---------- */
+function fill(sel, items, placeholder){
+  sel.innerHTML = `<option value="">${placeholder}</option>` + items.map(i=>`<option value="${i.v}" ${i.dis?"disabled":""}>${i.t}</option>`).join("");
+}
+
+function render(){
+  const keepPeriod = periodSel.value;
+  fill(periodSel, PERIODS.map((p,i)=>{
+    const b = bookings[i+1];
+    return {v:i+1, t: b ? `الحصة ${p} – محجوزة (${b.teacher})` : `الحصة ${p}`, dis:!!b};
+  }), "اختاري الحصة");
+  if(keepPeriod && !bookings[keepPeriod]) periodSel.value = keepPeriod;
+  else if(keepPeriod){ periodSel.value=""; klassSel.value=""; klassSel.disabled=true; msg.className="msg err"; msg.textContent="حُجزت الحصة التي اخترتِها للتو، اختاري حصة أخرى."; }
+  periodSel.disabled = !teacherSel.value;
+
+  $("slots").innerHTML = PERIODS.map((p,i)=>{
+    const b = bookings[i+1];
+    return `<li><span class="p">الحصة ${p}</span>${
+      b ? `<span class="booked"><span>${b.teacher} – ${b.className}</span><span class="stamp ${justBooked===i+1?"new":""}">محجوزة</span>${
+            canCancel(b) ? `<button type="button" class="cancel" data-cancel="${i+1}">إلغاء</button>` : ``}</span>`
+        : `<span class="free">متاحة</span>`}</li>`;
+  }).join("");
+  justBooked = null;
+  updateBtn();
+}
+
+function updateBtn(){ btn.disabled = !(teacherSel.value && periodSel.value && klassSel.value); }
+
+teacherSel.addEventListener("change",()=>{ periodSel.disabled=!teacherSel.value; msg.textContent=""; updateBtn(); });
+periodSel.addEventListener("change",()=>{ klassSel.disabled=!periodSel.value; msg.textContent=""; updateBtn(); });
+klassSel.addEventListener("change",updateBtn);
+
+$("slots").addEventListener("click", async e=>{
+  const b = e.target.closest("[data-cancel]");
+  if(!b) return;
+  const period = +b.dataset.cancel, rec = bookings[period];
+  if(!confirm(`إلغاء حجز الحصة ${PERIODS[period-1]} (${rec.teacher} – ${rec.className})؟`)) return;
+  b.disabled = true; b.textContent = "…";
+  try{
+    await cancel(period);
+    msg.className="msg ok"; msg.textContent=`أُلغي حجز الحصة ${PERIODS[period-1]}.`;
+  }catch(err){
+    msg.className="msg err";
+    msg.textContent = `تعذّر الإلغاء. يُسمح بالإلغاء خلال ${CANCEL_HOURS} ساعة من الحجز فقط — بعدها راجعي إدارة المدرسة.`;
+    b.disabled = false; b.textContent = "إلغاء";
+  }
+});
+
+$("bookForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const period = +periodSel.value, teacher = teacherSel.value, className = klassSel.value;
+  btn.disabled = true; msg.className="msg"; msg.textContent="جارٍ الحجز…";
+  try{
+    await book(period, teacher, className);
+    justBooked = period;
+    msg.className="msg ok"; msg.textContent=`تم حجز المكتبة: الحصة ${PERIODS[period-1]} – ${className}.`;
+    periodSel.value=""; klassSel.value=""; klassSel.disabled=true;
+    if(DEMO) render();
+  }catch(err){
+    msg.className="msg err";
+    msg.textContent = err.message==="taken" ? "هذه الحصة محجوزة مسبقاً، اختاري حصة أخرى." : "لم يتم الحجز. تحقّقي من الاتصال وحاولي مرة أخرى.";
+    updateBtn();
+  }
+});
+
+/* ══════════════════ التقرير ══════════════════ */
+const repMsg = $("repMsg");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dowOf = iso => { const [y,m,d] = iso.split("-").map(Number); return DAYS[new Date(Date.UTC(y,m-1,d)).getUTCDay()]; };
+
+function setRange(from, to){ $("from").value = from; $("to").value = to; loadReport(); }
+
+$("printBtn").addEventListener("click", ()=>window.print());
+
+document.querySelectorAll(".quick button").forEach(b=>b.addEventListener("click", ()=>{
+  const [y,m] = today.split("-").map(Number);
+  const pad = n => String(n).padStart(2,"0");
+  const last = (yy,mm) => new Date(Date.UTC(yy,mm,0)).getUTCDate();
+  if(b.dataset.q === "month")      setRange(`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(last(y,m))}`);
+  else if(b.dataset.q === "prev"){ const py = m===1?y-1:y, pm = m===1?12:m-1;
+                                   setRange(`${py}-${pad(pm)}-01`, `${py}-${pad(pm)}-${pad(last(py,pm))}`); }
+  else                              setRange("2000-01-01", today);
+}));
+$("from").addEventListener("change", loadReport);
+$("to").addEventListener("change", loadReport);
+
+async function loadReport(){
+  const from = $("from").value, to = $("to").value;
+  if(!from || !to) return;
+  if(from > to){ repMsg.className="msg err"; repMsg.textContent="تاريخ البداية بعد تاريخ النهاية."; return; }
+  repMsg.className="msg"; repMsg.textContent="جارٍ تحميل السجل…";
+  $("printRange").textContent = `الفترة من ${from} إلى ${to}`;
+
+  let rows = [];
+  try{
+    if(DEMO){
+      rows = Object.values(demoStore).filter(b=>b.date>=from && b.date<=to);
+    }else{
+      const q = fs.query(fs.collection(db,COLLECTION),
+                         fs.where("date",">=",from), fs.where("date","<=",to),
+                         fs.orderBy("date"));
+      const snap = await fs.getDocs(q);
+      snap.forEach(d=>rows.push(d.data()));
+    }
+  }catch(err){
+    repMsg.className="msg err"; repMsg.textContent="تعذّر تحميل السجل. تحقّقي من الاتصال أو قواعد Firestore.";
+    return;
+  }
+
+  rows.sort((a,b)=> a.date===b.date ? a.period-b.period : (a.date<b.date?-1:1));
+  repMsg.textContent = "";
+  renderReport(rows, from, to);
+}
+
+function renderReport(rows, from, to){
+  const days = new Set(rows.map(r=>r.date));
+  const byTeacher = {}, byClass = {}, byPeriod = {};
+  rows.forEach(r=>{
+    byTeacher[r.teacher] = (byTeacher[r.teacher]||0)+1;
+    byClass[r.className]  = (byClass[r.className]||0)+1;
+    byPeriod[r.period]    = (byPeriod[r.period]||0)+1;
+  });
+  const topPeriod = Object.entries(byPeriod).sort((a,b)=>b[1]-a[1])[0];
+
+  $("repSummary").innerHTML = [
+    [rows.length, "حجز"],
+    [days.size, "يوم فيه حجز"],
+    [Object.keys(byTeacher).length, "معلّمة"],
+    [topPeriod ? PERIODS[topPeriod[0]-1] : "—", "الحصة الأكثر"]
+  ].map(([n,l])=>`<div class="sumcard"><div class="n">${esc(n)}</div><div class="l">${l}</div></div>`).join("");
+
+  if(!rows.length){
+    $("repTable").innerHTML = `<tr><td class="empty">لا توجد حجوزات في هذه الفترة.</td></tr>`;
+    $("repTeachers").innerHTML = $("repClasses").innerHTML = "";
+    return;
+  }
+
+  const fmt = ts => {
+    if(!ts || typeof ts.toDate !== "function") return "—";
+    const d = ts.toDate();
+    return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Amman",hour:"2-digit",minute:"2-digit"}).format(d);
+  };
+  $("repTable").innerHTML =
+    `<tr><th>التاريخ</th><th>اليوم</th><th>الحصة</th><th>المعلّمة</th><th>الصف</th><th>وقت الحجز</th></tr>` +
+    rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${PERIODS[r.period-1]||r.period}</td><td>${esc(r.teacher)}</td><td>${esc(r.className)}</td><td>${fmt(r.createdAt)}</td></tr>`).join("");
+
+  const tally = (obj, head) => {
+    const items = Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+    const max = items[0][1];
+    return `<tr><th>${head}</th><th>عدد الحصص</th><th></th></tr>` + items.map(([k,v])=>
+      `<tr><td>${esc(k)}</td><td>${v}</td><td style="width:45%"><span class="bar" style="width:${Math.round(v/max*100)}%"></span></td></tr>`).join("");
+  };
+  $("repTeachers").innerHTML = tally(byTeacher, "المعلّمة");
+  $("repClasses").innerHTML  = tally(byClass, "الصف");
+}
+
+/* ---------- التبويبات ---------- */
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-current", x===t ? "true":"false"));
+  const rep = t.dataset.view === "report";
+  $("view-book").hidden = rep;
+  $("view-report").hidden = !rep;
+  if(rep && !$("from").value){
+    const [y,m] = today.split("-").map(Number), pad = n=>String(n).padStart(2,"0");
+    setRange(`${y}-${pad(m)}-01`, today);
+  }
+}));
+
+/* ---------- التشغيل ---------- */
+(async ()=>{
+  fill(teacherSel, TEACHERS.map(t=>({v:t,t})), "اختاري اسمك");
+  fill(klassSel, CLASSES.map(c=>({v:c,t:c})), "اختاري الصف");
+  const t = await getAmmanDate();
+  today = `${t.y}-${String(t.m).padStart(2,"0")}-${String(t.d).padStart(2,"0")}`;
+  $("dayName").textContent = DAYS[t.dow];
+  $("dateStr").textContent = `${t.d}/${t.m}/${t.y}`;
+  $("timeSrc").textContent = t.src;
+
+  await initDB();
+  if(WEEKEND.includes(t.dow)){
+    $("banner").innerHTML += `<div class="banner closed">اليوم عطلة، الحجز غير متاح.</div>`;
+    [teacherSel,periodSel,klassSel,btn].forEach(el=>el.disabled=true);
+  }
+  listen();
+  if(WEEKEND.includes(t.dow)) teacherSel.disabled = true;
+
+  // إعادة تحميل تلقائي عند تغيّر اليوم (لو بقيت الصفحة مفتوحة)
+  setInterval(async ()=>{
+    const n = await getAmmanDate();
+    const s = `${n.y}-${String(n.m).padStart(2,"0")}-${String(n.d).padStart(2,"0")}`;
+    if(s!==today) location.reload();
+  }, 10*60*1000);
+})();
+</script>
+</body>
+</html>
