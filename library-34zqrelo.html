@@ -70,6 +70,12 @@
   input[type="date"],input[type="text"]{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
   input[type="text"]:disabled{background:#EEF1F0;color:#9AA3AC}
   .hint{font-size:.8rem;color:var(--muted);margin-top:3px}
+  .opt{font-weight:400;color:var(--muted);font-size:.85rem}
+  input[type="url"]{width:100%;font:inherit;padding:10px;border:1px solid var(--line);
+                    border-radius:6px;background:#fff;color:var(--ink);direction:ltr;text-align:left}
+  input[type="url"]:disabled{background:#EEF1F0;color:#9AA3AC}
+  input[type="url"]:invalid{border-color:#D9A2A9}
+  a.lnk{color:var(--shelf);font-weight:500}
   .quota{margin-top:6px;font-size:.88rem;color:var(--muted)}
   .quota b{color:var(--shelf)}
   .quota.out b{color:#B3261E}
@@ -169,6 +175,12 @@
       <div class="step"><span class="num">7</span><div>
         <label for="stype">نوع الحصة</label>
         <select id="stype" required disabled><option value="">اختاري نوع الحصة</option></select>
+      </div></div>
+      <div class="step"><span class="num">8</span><div>
+        <label for="link">رابط الحصة التفاعلية <span class="opt">(اختياري)</span></label>
+        <input type="url" id="link" disabled maxlength="500" autocomplete="off"
+               inputmode="url" dir="ltr" placeholder="https://...">
+        <div class="hint">رابط الدرس على Teams أو Wordwall أو أي منصة. اتركيه فارغاً إن لم يكن لديك رابط.</div>
       </div></div>
       <button type="submit" id="submitBtn" disabled>احجزي المكتبة</button>
       <div class="gate" id="gate" role="status" aria-live="polite"></div>
@@ -318,7 +330,7 @@ const firebaseConfig = {
 const DAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const $ = id => document.getElementById(id);
 const teacherSel = $("teacher"), daySel = $("day"), periodSel = $("period"), klassSel = $("klass"),
-      subjectSel = $("subject"), lessonInp = $("lesson"), stypeSel = $("stype"),
+      subjectSel = $("subject"), lessonInp = $("lesson"), stypeSel = $("stype"), linkInp = $("link"),
       btn = $("submitBtn"), msg = $("msg");
 
 let today = null;          // "YYYY-MM-DD"
@@ -385,6 +397,18 @@ const isOver = i => {
   return t ? nowMin() >= toMin(t[1]) : false;
 };
 const slotTime = i => { const t = schedule[i]; return t ? `${t[0]} – ${t[1]}` : ""; };
+
+/* الرابط: نقبل http/https فقط، ونعرض اسم الموقع بدل العنوان الطويل */
+function cleanLink(v){
+  const t = (v || "").trim();
+  if(!t) return "";
+  if(!/^https?:\/\//i.test(t)) return null;      // غير صالح
+  try{ new URL(t); }catch{ return null; }
+  return t.slice(0, 500);
+}
+function linkHost(u){
+  try{ return new URL(u).hostname.replace(/^www\./, ""); }catch{ return "رابط"; }
+}
 
 /* ---------- قواعد التوزيع ---------- */
 const isCore    = t => CORE_TEACHERS.includes(t);
@@ -621,8 +645,8 @@ function render(){
   if(keepPeriod && !bookings[keepPeriod] && !isOver(keepPeriod-1)) periodSel.value = keepPeriod;
   else if(keepPeriod){
     periodSel.value=""; klassSel.value=""; klassSel.disabled=true;
-    subjectSel.value=""; lessonInp.value=""; stypeSel.value="";
-    subjectSel.disabled = lessonInp.disabled = stypeSel.disabled = true;
+    subjectSel.value=""; lessonInp.value=""; stypeSel.value=""; linkInp.value="";
+    subjectSel.disabled = lessonInp.disabled = stypeSel.disabled = linkInp.disabled = true;
     msg.className="msg err";
     msg.textContent = isOver(keepPeriod-1)
       ? `انتهى وقت الحصة ${PERIODS[keepPeriod-1]} (${slotTime(keepPeriod-1)})، اختاري حصة لم تنتهِ بعد.`
@@ -666,7 +690,8 @@ function render(){
     return `<li><span class="p">الحصة ${p}<br><span class="sub">${slotTime(i)}</span></span><span class="booked">
       <span>${esc(b.teacher)} – ${esc(b.className)}${
         extra ? `<br><span class="sub">${esc(extra)}</span>` : ``}${
-        b.sessionType ? `<br><span class="tag">${esc(b.sessionType)}</span>` : ``}</span>
+        b.sessionType ? `<br><span class="tag">${esc(b.sessionType)}</span>` : ``}${
+        b.lessonLink ? `<br><a class="lnk" href="${esc(b.lessonLink)}" target="_blank" rel="noopener noreferrer">🔗 ${esc(linkHost(b.lessonLink))}</a>` : ``}</span>
       <span class="stamp ${justBooked===i+1?"new":""}">محجوزة</span>${
         canCancel(b) ? `<button type="button" class="cancel" data-cancel="${i+1}">إلغاء</button>` : ``}
     </span></li>`;
@@ -678,6 +703,7 @@ function render(){
 function updateBtn(){
   const full = teacherSel.value && periodSel.value && klassSel.value &&
                subjectSel.value && lessonInp.value.trim() && stypeSel.value;
+  // الرابط اختياري، لا يمنع الحجز
   btn.disabled = !full || !!blockReason(teacherSel.value, +periodSel.value, klassSel.value, stypeSel.value);
 }
 
@@ -692,6 +718,7 @@ klassSel.addEventListener("change",()=>{
   subjectSel.disabled = !klassSel.value;
   lessonInp.disabled  = !klassSel.value;
   stypeSel.disabled   = !klassSel.value;
+  linkInp.disabled    = !klassSel.value;
   msg.textContent = "";
   updateBtn();
 });
@@ -733,6 +760,21 @@ $("askBtn").addEventListener("click", async ()=>{
 $("bookForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const period = +periodSel.value;
+  // حارس الاكتمال: يمنع مرور حجز بحصة غير مختارة (period = 0)
+  if(!(period >= 1 && period <= PERIODS.length)){
+    render(); msg.className = "msg err";
+    msg.textContent = "اختاري الحصة أولاً.";
+    return;
+  }
+  if(!teacherSel.value || !klassSel.value || !subjectSel.value || !lessonInp.value.trim() || !stypeSel.value){
+    msg.className = "msg err"; msg.textContent = "أكملي جميع الحقول المطلوبة."; return;
+  }
+  const link = cleanLink(linkInp.value);
+  if(link === null){
+    msg.className = "msg err";
+    msg.textContent = "الرابط غير صالح. يجب أن يبدأ بـ https:// — أو اتركيه فارغاً.";
+    linkInp.focus(); return;
+  }
   const rec = {
     date: bookDate, period,
     teacher: teacherSel.value,
@@ -741,17 +783,17 @@ $("bookForm").addEventListener("submit", async e=>{
     lessonTitle: lessonInp.value.trim().slice(0,80),
     sessionType: stypeSel.value
   };
+  if(link) rec.lessonLink = link;
   const why = blockReason(rec.teacher, period, rec.className, rec.sessionType);
   if(why){ render(); msg.className="msg err"; msg.textContent = why; return; }
   btn.disabled = true; msg.className="msg"; msg.textContent="جارٍ الحجز…";
   try{
     await book(rec);
     justBooked = period;
-    msg.className="msg ok"; msg.textContent=`تم حجز المكتبة: الحصة ${PERIODS[period-1]} – ${rec.className}.`;
-    periodSel.value=""; klassSel.value=""; klassSel.disabled=true;
-    subjectSel.value=""; lessonInp.value=""; stypeSel.value="";
-    subjectSel.disabled = lessonInp.disabled = stypeSel.disabled = true;
     const ok = `تم حجز المكتبة: الحصة ${PERIODS[period-1]} – ${rec.className}.`;
+    periodSel.value=""; klassSel.value=""; klassSel.disabled=true;
+    subjectSel.value=""; lessonInp.value=""; stypeSel.value=""; linkInp.value="";
+    subjectSel.disabled = lessonInp.disabled = stypeSel.disabled = linkInp.disabled = true;
     render();
     msg.className = "msg ok"; msg.textContent = ok;
   }catch(err){
@@ -861,8 +903,10 @@ function renderReport(rows, reqs, from, to){
   };
   const dash = v => v ? esc(v) : "—";
   $("repTable").innerHTML =
-    `<tr><th>التاريخ</th><th>اليوم</th><th>الفترة</th><th>الحصة</th><th>المعلّمة</th><th>الصف</th><th>المادة</th><th>عنوان الدرس</th><th>نوع الحصة</th><th>وقت الحجز</th></tr>` +
-    rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${shiftOf(r.date)}</td><td>${PERIODS[r.period-1]||r.period}</td><td>${esc(r.teacher)}</td><td>${esc(r.className)}</td><td>${dash(r.subject)}</td><td style="white-space:normal">${dash(r.lessonTitle)}</td><td>${dash(r.sessionType)}</td><td>${fmt(r.createdAt)}</td></tr>`).join("");
+    `<tr><th>التاريخ</th><th>اليوم</th><th>الفترة</th><th>الحصة</th><th>المعلّمة</th><th>الصف</th><th>المادة</th><th>عنوان الدرس</th><th>نوع الحصة</th><th>الرابط</th><th>وقت الحجز</th></tr>` +
+    rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${shiftOf(r.date)}</td><td>${PERIODS[r.period-1]||r.period}</td><td>${esc(r.teacher)}</td><td>${esc(r.className)}</td><td>${dash(r.subject)}</td><td style="white-space:normal">${dash(r.lessonTitle)}</td><td>${dash(r.sessionType)}</td><td>${
+      r.lessonLink ? `<a class="lnk" href="${esc(r.lessonLink)}" target="_blank" rel="noopener noreferrer">${esc(linkHost(r.lessonLink))}</a>` : "—"
+    }</td><td>${fmt(r.createdAt)}</td></tr>`).join("");
 
   const tally = (obj, head) => {
     const items = Object.entries(obj).sort((a,b)=>b[1]-a[1]);
