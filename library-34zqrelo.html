@@ -37,6 +37,9 @@
   button:disabled{background:#A9BCD6;cursor:not-allowed}
   .msg{margin-top:12px;font-size:.95rem;min-height:1.4em}
   .msg.ok{color:#007B72} .msg.err{color:#B3261E}
+  .gate{margin-top:12px;font-size:.92rem;color:#8C3B1E;background:#FBEAE4;
+        border:1px solid #E3BFB2;border-radius:8px;padding:9px 11px;display:none}
+  .gate.on{display:block}
   h2{font-size:1.05rem;margin:28px 0 10px}
   .slots{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
   .slots li{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);align-items:center}
@@ -67,10 +70,19 @@
   input[type="date"],input[type="text"]{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
   input[type="text"]:disabled{background:#EEF1F0;color:#9AA3AC}
   .hint{font-size:.8rem;color:var(--muted);margin-top:3px}
+  .quota{margin-top:6px;font-size:.88rem;color:var(--muted)}
+  .quota b{color:var(--shelf)}
+  .quota.out b{color:#B3261E}
+  #fullBox{margin-top:14px;padding:12px;background:#FFF4E0;border:1px solid #E9C98A;border-radius:8px}
+  .fullnote{margin:0 0 10px;font-size:.9rem;color:#7A5A12}
+  #askBtn{background:var(--gold)}
+  #askBtn:disabled{background:#DCCB9E}
+  .roll{color:var(--stamp);font-weight:700}
   .quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
   .quick button{width:auto;flex:1;min-width:90px;padding:7px 10px;font-size:.85rem;font-weight:500;background:var(--shelf-soft);color:var(--shelf)}
   .printbtn{background:var(--stamp)}
-  .sumgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px}
+  .sumgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+  @media (max-width:430px){.sumgrid{grid-template-columns:repeat(2,1fr)}}
   .sumcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center}
   .sumcard .n{font-size:1.7rem;font-weight:700;color:var(--shelf);line-height:1.2}
   .sumcard .l{font-size:.82rem;color:var(--muted)}
@@ -106,12 +118,13 @@
 <div class="wrap">
   <header>
     <p class="school">مدرسة إناث الجوفة الإعدادية – مكتبة المدرسة</p>
-    <h1>حجز المكتبة لليوم</h1>
+    <h1>حجز حصص المكتبة</h1>
     <div class="today">
       <span class="dayname" id="dayName">…</span>
       <span class="datestr" id="dateStr">جارٍ جلب التاريخ</span>
     </div>
     <div class="shift" id="shiftStr"></div>
+    <div class="src" id="weekStr"></div>
     <div class="src" id="timeSrc"></div>
     <p class="slogan">📚 المكتبة... حيث يبدأ المستقبل ✨</p>
   </header>
@@ -129,34 +142,49 @@
       <div class="step"><span class="num">1</span><div>
         <label for="teacher">اسم المعلمة</label>
         <select id="teacher" required><option value="">اختاري اسمك</option></select>
+        <div class="quota" id="quota"></div>
       </div></div>
       <div class="step"><span class="num">2</span><div>
+        <label for="day">اليوم</label>
+        <select id="day" required disabled><option value="">اختاري اليوم</option></select>
+        <div class="hint" id="dayHint"></div>
+      </div></div>
+      <div class="step"><span class="num">3</span><div>
         <label for="period">الحصة</label>
         <select id="period" required disabled><option value="">اختاري الحصة</option></select>
       </div></div>
-      <div class="step"><span class="num">3</span><div>
+      <div class="step"><span class="num">4</span><div>
         <label for="klass">الصف والشعبة</label>
         <select id="klass" required disabled><option value="">اختاري الصف</option></select>
       </div></div>
-      <div class="step"><span class="num">4</span><div>
+      <div class="step"><span class="num">5</span><div>
         <label for="subject">المادة</label>
         <select id="subject" required disabled><option value="">اختاري المادة</option></select>
       </div></div>
-      <div class="step"><span class="num">5</span><div>
+      <div class="step"><span class="num">6</span><div>
         <label for="lesson">عنوان الدرس</label>
         <input type="text" id="lesson" required disabled maxlength="80" autocomplete="off" placeholder="اكتبي عنوان الدرس">
         <div class="hint">مثال: درس الكسور العشرية</div>
       </div></div>
-      <div class="step"><span class="num">6</span><div>
+      <div class="step"><span class="num">7</span><div>
         <label for="stype">نوع الحصة</label>
         <select id="stype" required disabled><option value="">اختاري نوع الحصة</option></select>
       </div></div>
       <button type="submit" id="submitBtn" disabled>احجزي المكتبة</button>
+      <div class="gate" id="gate" role="status" aria-live="polite"></div>
       <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+      <div id="fullBox" hidden>
+        <p class="fullnote">لا توجد حصة شاغرة في أي يوم متبقٍّ من هذا الأسبوع. سجّلي طلبك لتحصلي على حصة إضافية في رصيد الأسبوع القادم.</p>
+        <button type="button" id="askBtn">🔖 سجّلي طلبك — الأسبوع ممتلئ</button>
+      </div>
     </form>
 
-    <h2>جدول المكتبة اليوم</h2>
+    <h2 id="slotsTitle">جدول المكتبة اليوم</h2>
     <ul class="slots" id="slots"></ul>
+
+    <h2>استهلاك الشعب هذا الأسبوع</h2>
+    <ul class="slots" id="classUse"></ul>
   </section>
 
   <!-- ══════════ التقرير ══════════ -->
@@ -196,6 +224,10 @@
 
     <h2>حسب نوع الحصة</h2>
     <div class="tablewrap"><table id="repTypes"></table></div>
+
+    <h2>الطلبات غير الملبّاة</h2>
+    <p class="muted" style="margin:-4px 0 10px;font-size:.85rem">معلمات فتحن الصفحة ولم يجدن حصة شاغرة، فسجّلن طلبهنّ.</p>
+    <div class="tablewrap"><table id="repRequests"></table></div>
   </section>
 </div>
 
@@ -234,6 +266,40 @@ const TIMETABLE = {
   evening: [ ["12:10","12:50"], ["12:50","13:30"], ["13:30","14:10"], ["14:30","15:05"],
              ["15:05","15:40"], ["15:40","16:15"], ["16:15","16:50"] ]
 };
+/* ═══════════ قواعد التوزيع العادل ═══════════ */
+
+// معلمات المواد الأساسية (عربي · إنجليزي · رياضيات · علوم · اجتماعيات · دين)
+// رصيدهنّ حصتان أسبوعياً، وباقي المعلمات حصة واحدة.
+// ⚠️ الأسماء يجب أن تطابق TEACHERS حرفياً.
+const CORE_TEACHERS = [
+  "حنان الشريقي","علا ابو رميلة","سمر دودين","غادة مصطفى",        // عربي
+  "بيان الشايب","ناريمان ابو شاور","هيا الطحلة",                   // إنجليزي
+  "عبير حدوش","خديجة نجم","تسنيم جبر",                             // رياضيات
+  "هلا الخراز","هبة سامي","ايات محمود",                            // علوم (ايات بديلة شيماء)
+  "بثينة جمال","رؤى العدوي",                                        // اجتماعيات
+  "اسماء السيد"                                                     // دين
+];
+
+const QUOTA_CORE  = 2;   // رصيد معلمة المواد الأساسية أسبوعياً
+const QUOTA_OTHER = 1;   // رصيد بقية المعلمات أسبوعياً
+const CLASS_CAP   = 3;   // أقصى عدد حصص لكل شعبة أسبوعياً
+const ONE_PER_DAY = true; // يمنع حجز حصتين للمعلمة نفسها في اليوم نفسه
+
+// بعد نهاية هذه الحصة تُفتح الحصص المتبقية للجميع ولو استهلكن الرصيد،
+// حتى لا تضيع. مربوط بالحصة لا بالساعة، ليعمل في الفترتين الصباحية والمسائية.
+const SURPLUS_AFTER_PERIOD = 3;
+
+// الرصيد المدوّر: إذا حاولت المعلمة يوم كانت المكتبة ممتلئة تماماً وسجّلت طلبها،
+// تحصل على حصة إضافية الأسبوع التالي. المدوّر معفى من قاعدة «حصة واحدة في اليوم».
+const ROLLOVER_MAX  = 1;   // أقصى ما يُدوَّر للمعلمة أسبوعياً
+const REQUESTS = "requests_34zqrelo";   // مجموعة الطلبات غير الملبّاة
+
+// حصة التابليت غير متاحة في هذه الحصص
+const NO_TABLET_PERIODS = [1, 7];
+const TABLET_TYPE = "حصة تابليت";
+
+/* ════════════════════════════════════════════ */
+
 const COLLECTION = "bookings_34zqrelo"; // اسم غير قابل للتخمين
 const WEEKEND  = [5, 6]; // الجمعة=5، السبت=6 (0=الأحد)
 const CANCEL_HOURS = 12; // مهلة الإلغاء بعد الحجز — يجب أن تطابق قواعد Firestore
@@ -251,13 +317,19 @@ const firebaseConfig = {
 
 const DAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const $ = id => document.getElementById(id);
-const teacherSel = $("teacher"), periodSel = $("period"), klassSel = $("klass"),
+const teacherSel = $("teacher"), daySel = $("day"), periodSel = $("period"), klassSel = $("klass"),
       subjectSel = $("subject"), lessonInp = $("lesson"), stypeSel = $("stype"),
       btn = $("submitBtn"), msg = $("msg");
 
 let today = null;          // "YYYY-MM-DD"
-let shift = "morning";     // تُحسب من الشهر
-let schedule = [];         // جدول الفترة الحالية
+let weekStart = null, weekEnd = null;
+let prevStart = null, prevEnd = null;
+let week = [];             // حجوزات الأسبوع الحالي
+let prevWeek = [];         // حجوزات الأسبوع الماضي (لحساب المدوّر)
+let requests = [];         // الطلبات غير الملبّاة (أسبوعان)
+let bookDate = null;       // اليوم المختار للحجز (قد يكون اليوم أو يوماً قادماً هذا الأسبوع)
+let bookDow  = 0;
+let schedule = [];         // جدول فترة اليوم المختار
 let baseMin = 0, baseAt = 0;  // دقيقة اليوم بتوقيت عمّان + لحظة قياسها
 let bookings = {};         // period -> {teacher, className, createdAt}
 let justBooked = null;
@@ -283,15 +355,132 @@ async function getAmmanDate(){
 
 /* ---------- الفترة والتوقيت ---------- */
 const toMin = hhmm => { const [h,m] = hhmm.split(":").map(Number); return h*60+m; };
-const shiftName = () => shift === "evening" ? "مسائية" : "صباحية";
+const shiftOfDate  = iso => EVENING_MONTHS.includes(+iso.split("-")[1]) ? "evening" : "morning";
+const scheduleFor  = iso => TIMETABLE[shiftOfDate(iso)];
+const shiftName    = iso => shiftOfDate(iso) === "evening" ? "مسائية" : "صباحية";
+
+/* أيام الحجز المتاحة: من اليوم حتى الخميس من هذا الأسبوع */
+function openDays(){
+  const out = [];
+  const [y,m,d] = today.split("-").map(Number);
+  for(let k = 0; k < 7; k++){
+    const dt = new Date(Date.UTC(y, m-1, d + k));
+    const iso = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;
+    if(iso > weekEnd) break;
+    const dow = dt.getUTCDay();
+    if(WEEKEND.includes(dow)) continue;
+    out.push({iso, dow});
+  }
+  return out;
+}
 
 /* الساعة الحية: نثبّت دقيقة اليوم من الخادم، ثم نتابعها بساعة الجهاز.
    هكذا تبقى صحيحة ولو كانت ساعة جهاز المعلّمة مضبوطة خطأ. */
 const nowMin = () => baseMin + (Date.now() - baseAt)/60000;
 
 /* الحصة تُقفل بعد انتهاء وقتها */
-const isOver = i => { const t = schedule[i]; return t ? nowMin() >= toMin(t[1]) : false; };
+const isOver = i => {
+  if(bookDate !== today) return false;   // الأيام القادمة كل حصصها مفتوحة
+  const t = schedule[i];
+  return t ? nowMin() >= toMin(t[1]) : false;
+};
 const slotTime = i => { const t = schedule[i]; return t ? `${t[0]} – ${t[1]}` : ""; };
+
+/* ---------- قواعد التوزيع ---------- */
+const isCore    = t => CORE_TEACHERS.includes(t);
+const quotaOf   = t => isCore(t) ? QUOTA_CORE : QUOTA_OTHER;
+const usedByTeacher = t => week.filter(b => b.teacher === t).length;
+const bookedSameDay = t => week.some(b => b.date === bookDate && b.teacher === t);
+const usedByClass   = c => week.filter(b => b.className === c).length;
+const noTablet      = p => NO_TABLET_PERIODS.includes(p);
+
+/* الفائض يُفتح بعد نهاية الحصة المحددة — يعمل في الفترتين */
+const surplusOpen = () => {
+  const t = schedule[SURPLUS_AFTER_PERIOD-1];
+  return t ? nowMin() >= toMin(t[1]) : false;
+};
+
+/* ── الرصيد المدوّر ──
+   تستحقه المعلمة إذا سجّلت طلباً الأسبوع الماضي ولم تستهلك رصيدها كاملاً. */
+function rolloverOf(t){
+  if(!prevStart) return 0;
+  const asked = requests.some(r => r.teacher === t && r.date >= prevStart && r.date <= prevEnd);
+  if(!asked) return 0;
+  const usedLast = prevWeek.filter(b => b.teacher === t).length;
+  const unused   = quotaOf(t) - usedLast;
+  return Math.max(0, Math.min(ROLLOVER_MAX, unused));
+}
+const effectiveQuota = t => quotaOf(t) + rolloverOf(t);
+
+/* هل سجّلت طلباً اليوم؟ (حتى لا تسجّله مرتين) */
+const askedToday = t => requests.some(r => r.teacher === t && r.date === today);
+
+/* عدد الحصص الشاغرة في يوم ما (المنتهية لا تُحتسب إن كان اليوم هو اليوم الحالي) */
+function freeCount(iso){
+  const sched = scheduleFor(iso);
+  let free = 0;
+  for(let i = 0; i < PERIODS.length; i++){
+    const taken = week.some(b => b.date === iso && b.period === i+1);
+    const ended = iso === today && nowMin() >= toMin(sched[i][1]);
+    if(!taken && !ended) free++;
+  }
+  return free;
+}
+
+/* اليوم الوحيد المتاح للحجز: أقرب يوم ما زال فيه شاغر.
+   اليوم التالي لا يُفتح إلا إذا امتلأ الذي قبله — منعاً لحجز الأسبوع كله مسبقاً. */
+function firstOpenDay(){
+  for(const {iso} of openDays()) if(freeCount(iso) > 0) return iso;
+  return null;
+}
+
+/* الأسبوع ممتلئ: لا توجد حصة شاغرة في أي يوم متبقٍّ */
+function weekFull(){
+  const days = openDays();
+  if(!days.length) return false;
+  if(firstOpenDay()) return false;                       // ما زال في شاغر
+  return days.some(({iso}) => week.some(b => b.date === iso));  // امتلأ فعلاً لا أنه انقضى
+}
+
+/* لا مكان اليوم: كل حصة إما محجوزة أو انتهى وقتها، وحُجزت واحدة على الأقل.
+   (لو انتهت كل الحصص دون أن تُحجز أي منها فالمكتبة لم تكن ممتلئة — لا يُحتسب طلب) */
+const dayFull = () => {
+  const anyBooked = PERIODS.some((_, i) => !!bookings[i+1]);
+  const noneOpen  = PERIODS.every((_, i) => !!bookings[i+1] || isOver(i));
+  return anyBooked && noneOpen;
+};
+
+/* حدود الأسبوع: يبدأ الأحد (dow 0) وينتهي السبت */
+function weekBounds(y, m, d, dow){
+  const base = new Date(Date.UTC(y, m-1, d));
+  const s = new Date(base); s.setUTCDate(base.getUTCDate() - dow);
+  const e = new Date(s);    e.setUTCDate(s.getUTCDate() + 6);
+  const f = x => `${x.getUTCFullYear()}-${String(x.getUTCMonth()+1).padStart(2,"0")}-${String(x.getUTCDate()).padStart(2,"0")}`;
+  return [f(s), f(e)];
+}
+
+/* سبب المنع — فارغ يعني مسموح */
+function blockReason(teacher, period, className, stype){
+  if(!teacher) return "";
+  const used = usedByTeacher(teacher);
+  const base = quotaOf(teacher), roll = rolloverOf(teacher), eff = base + roll;
+  // قاعدة «حصة واحدة في اليوم» — والمدوّر معفى منها
+  if(ONE_PER_DAY && bookedSameDay(teacher) && !(roll > 0 && used < eff))
+    return `لديكِ حجز في ${dayLabel(bookDate)} بالفعل — لا يُسمح بحصتين في اليوم نفسه.`;
+  if(used >= eff && !surplusOpen())
+    return `استهلكتِ رصيدك الأسبوعي (${eff} ${eff===1?"حصة":"حصص"}${roll?" مع المدوّر":""}). الحصص المتبقية تُفتح للجميع بعد نهاية الحصة ${PERIODS[SURPLUS_AFTER_PERIOD-1]}.`;
+  const open = firstOpenDay();
+  if(open && bookDate !== open)
+    return `الحجز متاح في ${dayLabel(open)}. لا يُفتح اليوم التالي إلا إذا امتلأ الذي قبله.`;
+  if(period && bookings[period]) return "هذه الحصة محجوزة.";
+  if(period && isOver(period-1))
+    return `انتهى وقت الحصة ${PERIODS[period-1]} (${slotTime(period-1)})، اختاري حصة لم تنتهِ بعد.`;
+  if(className && usedByClass(className) >= CLASS_CAP)
+    return `شعبة ${className} استهلكت ${CLASS_CAP} حصص هذا الأسبوع.`;
+  if(period && stype === TABLET_TYPE && noTablet(period))
+    return `${TABLET_TYPE} غير متاحة في الحصة ${PERIODS[period-1]}.`;
+  return "";
+}
 
 /* ---------- Firebase ---------- */
 async function initDB(){
@@ -304,25 +493,55 @@ async function initDB(){
   db = fs.getFirestore(appMod.initializeApp(firebaseConfig));
 }
 
+function indexDay(){
+  bookings = {};
+  week.filter(b => b.date === bookDate).forEach(b => { bookings[b.period] = b; });
+}
+const dayLabel = iso => {
+  const [y,m,d] = iso.split("-").map(Number);
+  const nm = DAYS[new Date(Date.UTC(y,m-1,d)).getUTCDay()];
+  return iso === today ? `${nm} (اليوم)` : `${nm} ${d}/${m}`;
+};
+
+function splitWeeks(all){
+  week     = all.filter(b => b.date >= weekStart && b.date <= weekEnd);
+  prevWeek = all.filter(b => b.date >= prevStart && b.date <= prevEnd);
+}
+
 function listen(){
-  if(DEMO){ bookings = {...demoStore}; render(); return; }
-  const q = fs.query(fs.collection(db,COLLECTION), fs.where("date","==",today));
-  fs.onSnapshot(q, snap=>{
-    bookings = {};
-    snap.forEach(doc=>{ const b = doc.data(); bookings[b.period] = b; });
-    render();
+  if(DEMO){ splitWeeks(Object.values(demoStore)); indexDay(); render(); return; }
+
+  // أسبوعان: الحالي للرصيد، والماضي لحساب المدوّر
+  const qb = fs.query(fs.collection(db,COLLECTION),
+                      fs.where("date",">=",prevStart), fs.where("date","<=",weekEnd));
+  fs.onSnapshot(qb, snap=>{
+    splitWeeks(snap.docs.map(d => d.data()));
+    indexDay(); render();
   }, ()=>{ msg.className="msg err"; msg.textContent="تعذّر قراءة الحجوزات. تحقّقي من الاتصال أو قواعد Firestore."; });
+
+  const qr = fs.query(fs.collection(db,REQUESTS),
+                      fs.where("date",">=",prevStart), fs.where("date","<=",weekEnd));
+  fs.onSnapshot(qr, snap=>{ requests = snap.docs.map(d => d.data()); render(); }, ()=>{});
+}
+
+/* تسجيل طلب غير ملبّى */
+async function logRequest(teacher){
+  const rec = {date: today, teacher, week: weekStart};
+  if(DEMO){ requests.push({...rec}); render(); return; }
+  await fs.setDoc(fs.doc(db, REQUESTS, `${today}_${teacher.replace(/\s+/g,"_")}`),
+                  {...rec, createdAt: fs.serverTimestamp()});
 }
 
 async function book(rec){
   const {period} = rec;
   if(DEMO){
-    if(demoStore[period]) throw new Error("taken");
+    const key = `${rec.date}_p${period}`;
+    if(demoStore[key]) throw new Error("taken");
     const now = Date.now();
-    demoStore[period] = {...rec, createdAt:{toMillis:()=>now, toDate:()=>new Date(now)}};
-    bookings = {...demoStore}; return;
+    demoStore[key] = {...rec, createdAt:{toMillis:()=>now, toDate:()=>new Date(now)}};
+    week = Object.values(demoStore); indexDay(); return;
   }
-  const ref = fs.doc(db,COLLECTION,`${today}_p${period}`);
+  const ref = fs.doc(db,COLLECTION,`${bookDate}_p${period}`);
   await fs.runTransaction(db, async tx=>{
     const s = await tx.get(ref);
     if(s.exists()) throw new Error("taken");
@@ -331,8 +550,8 @@ async function book(rec){
 }
 
 async function cancel(period){
-  if(DEMO){ delete demoStore[period]; bookings = {...demoStore}; render(); return; }
-  await fs.deleteDoc(fs.doc(db,COLLECTION,`${today}_p${period}`));
+  if(DEMO){ delete demoStore[`${bookDate}_p${period}`]; week = Object.values(demoStore); indexDay(); render(); return; }
+  await fs.deleteDoc(fs.doc(db,COLLECTION,`${bookDate}_p${period}`));
 }
 
 /* مهلة الإلغاء: القواعد تفرضها على الخادم، وهذا الفحص لإخفاء الزر فقط */
@@ -347,6 +566,50 @@ function fill(sel, items, placeholder){
 }
 
 function render(){
+  const teacher = teacherSel.value;
+  const gate = blockReason(teacher, null, null, null);
+
+  // شريط الرصيد
+  if(teacher){
+    const used = usedByTeacher(teacher), base = quotaOf(teacher),
+          roll = rolloverOf(teacher), eff = base + roll, out = used >= eff;
+    $("quota").className = "quota" + (out ? " out" : "");
+    $("quota").innerHTML = `${isCore(teacher) ? "مواد أساسية" : "رصيد عام"} — استخدمتِ <b>${used} من ${eff}</b> هذا الأسبوع` +
+      (roll ? ` <span class="roll">(${base} + ${roll} مدوّر)</span>` : "") +
+      (out ? (surplusOpen() ? " · الحصص المتبقية مفتوحة للجميع الآن"
+                            : ` · الفائض يُفتح بعد الحصة ${PERIODS[SURPLUS_AFTER_PERIOD-1]}`) : "");
+  } else $("quota").textContent = "";
+
+  // زرّ «ما في مكان» — يظهر فقط إذا كانت كل حصص اليوم محجوزة فعلاً
+  const showFull = !!teacher && weekFull();
+  $("fullBox").hidden = !showFull;
+  if(showFull){
+    const done = askedToday(teacher);
+    $("askBtn").disabled = done;
+    $("askBtn").textContent = done ? "✅ تم تسجيل طلبك" : "🔖 سجّلي طلبك — الأسبوع ممتلئ";
+  }
+
+  // الأيام المتاحة مع عدّاد الشواغر
+  const days = openDays();
+  const keepDay = daySel.value || bookDate;
+  const openDay = firstOpenDay();
+  fill(daySel, days.map(({iso})=>{
+    const free = freeCount(iso);
+    let label;
+    if(iso === openDay)   label = `${dayLabel(iso)} — ${free} شاغرة`;
+    else if(free === 0)   label = `${dayLabel(iso)} — ممتلئ`;
+    else                  label = `${dayLabel(iso)} — مقفل`;
+    return {v:iso, t: label, dis: iso !== openDay};
+  }), "اختاري اليوم");
+  daySel.disabled = !teacher || !openDay;
+  if(openDay) daySel.value = openDay;
+  else if(days.length) daySel.value = days[0].iso;
+  if(daySel.value && daySel.value !== bookDate){ bookDate = daySel.value; indexDay(); }
+  schedule = scheduleFor(bookDate);
+  $("dayHint").textContent = `الفترة ${shiftName(bookDate)} — ${schedule[0][0]} إلى ${schedule[PERIODS.length-1][1]}` +
+    (days.length > 1 ? " · اليوم التالي يُفتح عند امتلاء الذي قبله" : "");
+  $("slotsTitle").textContent = `جدول المكتبة — ${dayLabel(bookDate)}`;
+
   const keepPeriod = periodSel.value;
   fill(periodSel, PERIODS.map((p,i)=>{
     const b = bookings[i+1], over = isOver(i), tm = slotTime(i);
@@ -365,7 +628,35 @@ function render(){
       ? `انتهى وقت الحصة ${PERIODS[keepPeriod-1]} (${slotTime(keepPeriod-1)})، اختاري حصة لم تنتهِ بعد.`
       : "حُجزت الحصة التي اخترتِها للتو، اختاري حصة أخرى.";
   }
-  periodSel.disabled = !teacherSel.value;
+  periodSel.disabled = !teacher || !daySel.value || !!gate;
+  $("gate").className = "gate" + (gate ? " on" : "");
+  $("gate").textContent = gate || "";
+
+  // الشعب: حدّ 3 حصص أسبوعياً
+  const keepClass = klassSel.value;
+  fill(klassSel, CLASSES.map(c=>{
+    const n = usedByClass(c);
+    return {v:c, t: n >= CLASS_CAP ? `${c} — مكتملة (${n}/${CLASS_CAP})` : (n ? `${c} (${n}/${CLASS_CAP})` : c),
+            dis: n >= CLASS_CAP};
+  }), "اختاري الصف");
+  if(keepClass && usedByClass(keepClass) < CLASS_CAP) klassSel.value = keepClass;
+  klassSel.disabled = !periodSel.value || !!gate;
+
+  // نوع الحصة: التابليت ممنوع في الحصة الأولى والسابعة
+  const curP = +periodSel.value || 0;
+  const keepType = stypeSel.value;
+  fill(stypeSel, SESSION_TYPES.map(t=>{
+    const banned = t === TABLET_TYPE && noTablet(curP);
+    return {v:t, t: banned ? `${t} — غير متاحة في الحصة ${PERIODS[curP-1]}` : t, dis: banned};
+  }), "اختاري نوع الحصة");
+  if(keepType && !(keepType === TABLET_TYPE && noTablet(curP))) stypeSel.value = keepType;
+  stypeSel.disabled = !klassSel.value || !!gate;
+
+  // استهلاك الشعب هذا الأسبوع
+  $("classUse").innerHTML = CLASSES.map(c=>{
+    const n = usedByClass(c);
+    return `<li><span class="p">${c}</span><span class="${n>=CLASS_CAP?"over":"free"}">${n} من ${CLASS_CAP}</span></li>`;
+  }).join("");
 
   $("slots").innerHTML = PERIODS.map((p,i)=>{
     const b = bookings[i+1];
@@ -385,16 +676,23 @@ function render(){
 }
 
 function updateBtn(){
-  btn.disabled = !(teacherSel.value && periodSel.value && klassSel.value &&
-                   subjectSel.value && lessonInp.value.trim() && stypeSel.value);
+  const full = teacherSel.value && periodSel.value && klassSel.value &&
+               subjectSel.value && lessonInp.value.trim() && stypeSel.value;
+  btn.disabled = !full || !!blockReason(teacherSel.value, +periodSel.value, klassSel.value, stypeSel.value);
 }
 
-teacherSel.addEventListener("change",()=>{ periodSel.disabled=!teacherSel.value; msg.textContent=""; updateBtn(); });
-periodSel.addEventListener("change",()=>{ klassSel.disabled=!periodSel.value; msg.textContent=""; updateBtn(); });
+teacherSel.addEventListener("change",()=>{ msg.textContent=""; periodSel.value=""; klassSel.value=""; render(); });
+daySel.addEventListener("change",()=>{
+  bookDate = daySel.value; indexDay();
+  periodSel.value=""; klassSel.value=""; subjectSel.value=""; lessonInp.value=""; stypeSel.value="";
+  msg.textContent=""; render();
+});
+periodSel.addEventListener("change",()=>{ klassSel.disabled=!periodSel.value; msg.textContent=""; render(); });
 klassSel.addEventListener("change",()=>{
   subjectSel.disabled = !klassSel.value;
   lessonInp.disabled  = !klassSel.value;
   stypeSel.disabled   = !klassSel.value;
+  msg.textContent = "";
   updateBtn();
 });
 subjectSel.addEventListener("change",updateBtn);
@@ -417,23 +715,34 @@ $("slots").addEventListener("click", async e=>{
   }
 });
 
+$("askBtn").addEventListener("click", async ()=>{
+  const t = teacherSel.value;
+  if(!t || !weekFull() || askedToday(t)) return;
+  $("askBtn").disabled = true; $("askBtn").textContent = "جارٍ التسجيل…";
+  try{
+    await logRequest(t);
+    msg.className = "msg ok";
+    msg.textContent = "سُجّل طلبك. ستحصلين على حصة إضافية في رصيد الأسبوع القادم.";
+  }catch(err){
+    msg.className = "msg err";
+    msg.textContent = "تعذّر تسجيل الطلب. حاولي مرة أخرى.";
+    $("askBtn").disabled = false; $("askBtn").textContent = "🔖 سجّلي طلبك — الأسبوع ممتلئ";
+  }
+});
+
 $("bookForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const period = +periodSel.value;
   const rec = {
-    date: today, period,
+    date: bookDate, period,
     teacher: teacherSel.value,
     className: klassSel.value,
     subject: subjectSel.value,
     lessonTitle: lessonInp.value.trim().slice(0,80),
     sessionType: stypeSel.value
   };
-  if(isOver(period-1)){
-    render();
-    msg.className="msg err";
-    msg.textContent = `انتهى وقت الحصة ${PERIODS[period-1]} (${slotTime(period-1)})، اختاري حصة لم تنتهِ بعد.`;
-    return;
-  }
+  const why = blockReason(rec.teacher, period, rec.className, rec.sessionType);
+  if(why){ render(); msg.className="msg err"; msg.textContent = why; return; }
   btn.disabled = true; msg.className="msg"; msg.textContent="جارٍ الحجز…";
   try{
     await book(rec);
@@ -442,7 +751,9 @@ $("bookForm").addEventListener("submit", async e=>{
     periodSel.value=""; klassSel.value=""; klassSel.disabled=true;
     subjectSel.value=""; lessonInp.value=""; stypeSel.value="";
     subjectSel.disabled = lessonInp.disabled = stypeSel.disabled = true;
-    if(DEMO) render();
+    const ok = `تم حجز المكتبة: الحصة ${PERIODS[period-1]} – ${rec.className}.`;
+    render();
+    msg.className = "msg ok"; msg.textContent = ok;
   }catch(err){
     msg.className="msg err";
     msg.textContent = err.message==="taken" ? "هذه الحصة محجوزة مسبقاً، اختاري حصة أخرى." : "لم يتم الحجز. تحقّقي من الاتصال وحاولي مرة أخرى.";
@@ -467,7 +778,7 @@ document.querySelectorAll(".quick button").forEach(b=>b.addEventListener("click"
   if(b.dataset.q === "month")      setRange(`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(last(y,m))}`);
   else if(b.dataset.q === "prev"){ const py = m===1?y-1:y, pm = m===1?12:m-1;
                                    setRange(`${py}-${pad(pm)}-01`, `${py}-${pad(pm)}-${pad(last(py,pm))}`); }
-  else                              setRange("2000-01-01", today);
+  else                              setRange("2000-01-01", weekEnd > today ? weekEnd : today);
 }));
 $("from").addEventListener("change", loadReport);
 $("to").addEventListener("change", loadReport);
@@ -479,11 +790,15 @@ async function loadReport(){
   repMsg.className="msg"; repMsg.textContent="جارٍ تحميل السجل…";
   $("printRange").textContent = `الفترة من ${from} إلى ${to}`;
 
-  let rows = [];
+  let rows = [], reqs = [];
   try{
     if(DEMO){
       rows = Object.values(demoStore).filter(b=>b.date>=from && b.date<=to);
+      reqs = requests.filter(r=>r.date>=from && r.date<=to);
     }else{
+      const rq = fs.query(fs.collection(db,REQUESTS),
+                          fs.where("date",">=",from), fs.where("date","<=",to), fs.orderBy("date"));
+      (await fs.getDocs(rq)).forEach(d=>reqs.push(d.data()));
       const q = fs.query(fs.collection(db,COLLECTION),
                          fs.where("date",">=",from), fs.where("date","<=",to),
                          fs.orderBy("date"));
@@ -496,11 +811,22 @@ async function loadReport(){
   }
 
   rows.sort((a,b)=> a.date===b.date ? a.period-b.period : (a.date<b.date?-1:1));
+  reqs.sort((a,b)=> a.date<b.date?-1:1);
   repMsg.textContent = "";
-  renderReport(rows, from, to);
+  renderReport(rows, reqs, from, to);
 }
 
-function renderReport(rows, from, to){
+function renderReport(rows, reqs, from, to){
+  // الأيام الممتلئة: كل حصصها السبع محجوزة
+  const perDay = {};
+  rows.forEach(r => { (perDay[r.date] = perDay[r.date] || new Set()).add(r.period); });
+  const fullDays = Object.keys(perDay).filter(d => perDay[d].size >= PERIODS.length);
+
+  const reqTable = () => reqs.length
+    ? `<tr><th>التاريخ</th><th>اليوم</th><th>المعلّمة</th></tr>` +
+      reqs.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${esc(r.teacher)}</td></tr>`).join("")
+    : `<tr><td class="empty">لا توجد طلبات — كل من أرادت حصة وجدتها.</td></tr>`;
+
   const days = new Set(rows.map(r=>r.date));
   const byTeacher = {}, byClass = {}, byPeriod = {}, bySubject = {}, byType = {};
   rows.forEach(r=>{
@@ -516,12 +842,15 @@ function renderReport(rows, from, to){
     [rows.length, "حجز"],
     [days.size, "يوم فيه حجز"],
     [Object.keys(byTeacher).length, "معلّمة"],
-    [topPeriod ? PERIODS[topPeriod[0]-1] : "—", "الحصة الأكثر"]
+    [topPeriod ? PERIODS[topPeriod[0]-1] : "—", "الحصة الأكثر"],
+    [fullDays.length, "يوم ممتلئ"],
+    [reqs.length, "طلب غير ملبّى"]
   ].map(([n,l])=>`<div class="sumcard"><div class="n">${esc(n)}</div><div class="l">${l}</div></div>`).join("");
 
   if(!rows.length){
     $("repTable").innerHTML = `<tr><td class="empty">لا توجد حجوزات في هذه الفترة.</td></tr>`;
     $("repTeachers").innerHTML = $("repClasses").innerHTML = $("repSubjects").innerHTML = $("repTypes").innerHTML = "";
+    $("repRequests").innerHTML = reqTable();
     return;
   }
 
@@ -541,6 +870,7 @@ function renderReport(rows, from, to){
     return `<tr><th>${head}</th><th>عدد الحصص</th><th></th></tr>` + items.map(([k,v])=>
       `<tr><td>${esc(k)}</td><td>${v}</td><td style="width:45%"><span class="bar" style="width:${Math.round(v/max*100)}%"></span></td></tr>`).join("");
   };
+  $("repRequests").innerHTML = reqTable();
   $("repTeachers").innerHTML = tally(byTeacher, "المعلّمة");
   $("repClasses").innerHTML  = tally(byClass, "الصف");
   const none = `<tr><td class="empty">لا توجد بيانات — الحجوزات القديمة سُجّلت قبل إضافة هذا الحقل.</td></tr>`;
@@ -556,7 +886,8 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{
   $("view-report").hidden = !rep;
   if(rep && !$("from").value){
     const [y,m] = today.split("-").map(Number), pad = n=>String(n).padStart(2,"0");
-    setRange(`${y}-${pad(m)}-01`, today);
+    const last = new Date(Date.UTC(y,m,0)).getUTCDate();
+    setRange(`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(last)}`);   // الشهر كاملاً
   }
 }));
 
@@ -568,26 +899,28 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{
   fill(stypeSel, SESSION_TYPES.map(c=>({v:c,t:c})), "اختاري نوع الحصة");
   const t = await getAmmanDate();
   today = `${t.y}-${String(t.m).padStart(2,"0")}-${String(t.d).padStart(2,"0")}`;
-  shift    = EVENING_MONTHS.includes(t.m) ? "evening" : "morning";
-  schedule = TIMETABLE[shift];
+  bookDate = today; bookDow = t.dow;
+  schedule = scheduleFor(bookDate);
   baseMin  = t.hh*60 + t.mi;
   baseAt   = Date.now();
+  [weekStart, weekEnd] = weekBounds(t.y, t.m, t.d, t.dow);
+  const back = new Date(Date.UTC(t.y, t.m-1, t.d)); back.setUTCDate(back.getUTCDate() - 7);
+  [prevStart, prevEnd] = weekBounds(back.getUTCFullYear(), back.getUTCMonth()+1, back.getUTCDate(), t.dow);
 
   $("dayName").textContent = DAYS[t.dow];
   $("dateStr").textContent = `${t.d}/${t.m}/${t.y}`;
-  $("shiftStr").textContent = `الفترة ${shiftName()} — الحصص من ${schedule[0][0]} إلى ${schedule[schedule.length-1][1]}`;
+  $("shiftStr").textContent = `الفترة ${shiftName(today)} — الحصص من ${schedule[0][0]} إلى ${schedule[schedule.length-1][1]}`;
+  $("weekStr").textContent = `أسبوع ${weekStart} إلى ${weekEnd} (يبدأ الأحد)`;
   $("timeSrc").textContent = t.src;
 
   await initDB();
-  if(WEEKEND.includes(t.dow)){
-    $("banner").innerHTML += `<div class="banner closed">اليوم عطلة، الحجز غير متاح.</div>`;
-    [teacherSel,periodSel,klassSel,subjectSel,lessonInp,stypeSel,btn].forEach(el=>el.disabled=true);
+  if(!openDays().length){
+    $("banner").innerHTML += `<div class="banner closed">انتهى أسبوع الحجز. يفتح الحجز من جديد يوم الأحد.</div>`;
+    [teacherSel,daySel,periodSel,klassSel,subjectSel,lessonInp,stypeSel,btn].forEach(el=>el.disabled=true);
   }
   listen();
-  if(WEEKEND.includes(t.dow)) teacherSel.disabled = true;
-
   // تحديث كل دقيقة ليُقفل ما انتهى وقته والصفحة مفتوحة
-  setInterval(()=>{ if(!WEEKEND.includes(t.dow)) render(); }, 60*1000);
+  setInterval(()=>{ if(openDays().length) render(); }, 60*1000);
 
   // إعادة تحميل تلقائي عند تغيّر اليوم (لو بقيت الصفحة مفتوحة)
   setInterval(async ()=>{
