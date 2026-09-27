@@ -84,6 +84,14 @@
   #askBtn{background:var(--gold)}
   #askBtn:disabled{background:#DCCB9E}
   .roll{color:var(--stamp);font-weight:700}
+  .mine{background:var(--shelf-soft);border-radius:10px;padding:14px;margin-top:22px}
+  .mine h3{margin:0 0 10px;font-size:1rem;color:var(--shelf)}
+  .mine ul{list-style:none;margin:0;padding:0}
+  .mine li{display:flex;justify-content:space-between;align-items:center;gap:8px;
+           padding:8px 0;border-bottom:1px solid #CBD8EA;font-size:.92rem}
+  .mine li:last-child{border:0}
+  .mine .det{font-size:.82rem;color:var(--muted);display:block}
+  .done{color:var(--muted);font-size:.85rem}
   .quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
   .quick button{width:auto;flex:1;min-width:90px;padding:7px 10px;font-size:.85rem;font-weight:500;background:var(--shelf-soft);color:var(--shelf)}
   .printbtn{background:var(--stamp)}
@@ -187,15 +195,20 @@
       <div class="msg" id="msg" role="status" aria-live="polite"></div>
 
       <div id="fullBox" hidden>
-        <p class="fullnote">لا توجد حصة شاغرة في أي يوم متبقٍّ من هذا الأسبوع. سجّلي طلبك لتحصلي على حصة إضافية في رصيد الأسبوع القادم.</p>
-        <button type="button" id="askBtn">🔖 سجّلي طلبك — الأسبوع ممتلئ</button>
+        <p class="fullnote">لا توجد حصة شاغرة في أي يوم متبقٍّ من هذه الدورة. سجّلي طلبك لتحصلي على حصة إضافية في رصيد الدورة القادمة.</p>
+        <button type="button" id="askBtn">🔖 سجّلي طلبك — الدورة ممتلئة</button>
       </div>
     </form>
+
+    <div id="mine"></div>
 
     <h2 id="slotsTitle">جدول المكتبة اليوم</h2>
     <ul class="slots" id="slots"></ul>
 
-    <h2>استهلاك الشعب هذا الأسبوع</h2>
+    <h2>حصص الدورة المتبقية لكل يوم</h2>
+    <ul class="slots" id="dayUse"></ul>
+
+    <h2>استهلاك الشعب في هذه الدورة</h2>
     <ul class="slots" id="classUse"></ul>
   </section>
 
@@ -280,22 +293,18 @@ const TIMETABLE = {
 };
 /* ═══════════ قواعد التوزيع العادل ═══════════ */
 
-// معلمات المواد الأساسية (عربي · إنجليزي · رياضيات · علوم · اجتماعيات · دين)
-// رصيدهنّ حصتان أسبوعياً، وباقي المعلمات حصة واحدة.
-// ⚠️ الأسماء يجب أن تطابق TEACHERS حرفياً.
-const CORE_TEACHERS = [
-  "حنان الشريقي","علا ابو رميلة","سمر دودين","غادة مصطفى",        // عربي
-  "بيان الشايب","ناريمان ابو شاور","هيا الطحلة",                   // إنجليزي
-  "عبير حدوش","خديجة نجم","تسنيم جبر",                             // رياضيات
-  "هلا الخراز","هبة سامي","ايات محمود",                            // علوم (ايات بديلة شيماء)
-  "بثينة جمال","رؤى العدوي",                                        // اجتماعيات
-  "اسماء السيد"                                                     // دين
-];
+/* دورة من 14 يوماً تتجدد تلقائياً. الدورة الأولى تبدأ الأحد 27/9/2026.
+   الأرقام ضعف ما كانت أسبوعياً، فالسلوك كما هو مع مرونة أوسع. */
+const CYCLE_START = "2026-09-27";
+const CYCLE_DAYS  = 14;
 
-const QUOTA_CORE  = 2;   // رصيد معلمة المواد الأساسية أسبوعياً
-const QUOTA_OTHER = 1;   // رصيد بقية المعلمات أسبوعياً
-const CLASS_CAP   = 3;   // أقصى عدد حصص لكل شعبة أسبوعياً
-const ONE_PER_DAY = true; // يمنع حجز حصتين للمعلمة نفسها في اليوم نفسه
+// رصيد موحّد لكل المعلمات: 20 × 3 = 60 من أصل 70 حصة، والفائض العشر
+// تُفتح للجميع بعد الحصة الثالثة لمن تحتاج أكثر.
+const QUOTA       = 3;   // رصيد كل معلمة في الدورة
+const CLASS_CAP   = 6;   // أقصى عدد حصص لكل شعبة في الدورة
+/* مسموح للمعلمة بأكثر من حصة في اليوم نفسه: كثيرات يدرّسن المادة نفسها لكل شعب
+   المرحلة، والعدل أن تأخذ الشعب المتوازية النشاط نفسه. رصيد الدورة هو القيد. */
+const ONE_PER_DAY = false;
 
 // بعد نهاية هذه الحصة تُفتح الحصص المتبقية للجميع ولو استهلكن الرصيد،
 // حتى لا تضيع. مربوط بالحصة لا بالساعة، ليعمل في الفترتين الصباحية والمسائية.
@@ -303,7 +312,7 @@ const SURPLUS_AFTER_PERIOD = 3;
 
 // الرصيد المدوّر: إذا حاولت المعلمة يوم كانت المكتبة ممتلئة تماماً وسجّلت طلبها،
 // تحصل على حصة إضافية الأسبوع التالي. المدوّر معفى من قاعدة «حصة واحدة في اليوم».
-const ROLLOVER_MAX  = 1;   // أقصى ما يُدوَّر للمعلمة أسبوعياً
+const ROLLOVER_MAX  = 1;   // أقصى ما يُدوَّر للمعلمة من دورة إلى التي بعدها
 const REQUESTS = "requests_34zqrelo";   // مجموعة الطلبات غير الملبّاة
 
 // حصة التابليت غير متاحة في هذه الحصص
@@ -371,15 +380,13 @@ const shiftOfDate  = iso => EVENING_MONTHS.includes(+iso.split("-")[1]) ? "eveni
 const scheduleFor  = iso => TIMETABLE[shiftOfDate(iso)];
 const shiftName    = iso => shiftOfDate(iso) === "evening" ? "مسائية" : "صباحية";
 
-/* أيام الحجز المتاحة: من اليوم حتى الخميس من هذا الأسبوع */
+/* أيام الحجز: أيام الدوام المتبقية في الدورة الحالية (من اليوم فصاعداً) */
 function openDays(){
   const out = [];
-  const [y,m,d] = today.split("-").map(Number);
-  for(let k = 0; k < 7; k++){
-    const dt = new Date(Date.UTC(y, m-1, d + k));
-    const iso = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;
-    if(iso > weekEnd) break;
-    const dow = dt.getUTCDay();
+  for(let k = 0; k < CYCLE_DAYS; k++){
+    const iso = addDays(weekStart, k);
+    if(iso < today) continue;
+    const dow = toUTC(iso).getUTCDay();
     if(WEEKEND.includes(dow)) continue;
     out.push({iso, dow});
   }
@@ -410,9 +417,18 @@ function linkHost(u){
   try{ return new URL(u).hostname.replace(/^www\./, ""); }catch{ return "رابط"; }
 }
 
+/* لحظة بدء الحصة بتوقيت عمّان (UTC+3) — تُحفظ مع الحجز ليُمنع إلغاء ما مضى */
+function periodStart(iso, period){
+  const t = scheduleFor(iso)[period-1];
+  if(!t) return null;
+  const [y,m,d] = iso.split("-").map(Number);
+  const [hh,mm] = t[0].split(":").map(Number);
+  return new Date(Date.UTC(y, m-1, d, hh-3, mm));
+}
+const isPast = (iso, period) => { const st = periodStart(iso, period); return st ? Date.now() >= st.getTime() : false; };
+
 /* ---------- قواعد التوزيع ---------- */
-const isCore    = t => CORE_TEACHERS.includes(t);
-const quotaOf   = t => isCore(t) ? QUOTA_CORE : QUOTA_OTHER;
+const quotaOf   = () => QUOTA;
 const usedByTeacher = t => week.filter(b => b.teacher === t).length;
 const bookedSameDay = t => week.some(b => b.date === bookDate && b.teacher === t);
 const usedByClass   = c => week.filter(b => b.className === c).length;
@@ -431,7 +447,7 @@ function rolloverOf(t){
   const asked = requests.some(r => r.teacher === t && r.date >= prevStart && r.date <= prevEnd);
   if(!asked) return 0;
   const usedLast = prevWeek.filter(b => b.teacher === t).length;
-  const unused   = quotaOf(t) - usedLast;
+  const unused   = quotaOf() - usedLast;
   return Math.max(0, Math.min(ROLLOVER_MAX, unused));
 }
 const effectiveQuota = t => quotaOf(t) + rolloverOf(t);
@@ -474,25 +490,30 @@ const dayFull = () => {
   return anyBooked && noneOpen;
 };
 
-/* حدود الأسبوع: يبدأ الأحد (dow 0) وينتهي السبت */
-function weekBounds(y, m, d, dow){
-  const base = new Date(Date.UTC(y, m-1, d));
-  const s = new Date(base); s.setUTCDate(base.getUTCDate() - dow);
-  const e = new Date(s);    e.setUTCDate(s.getUTCDate() + 6);
-  const f = x => `${x.getUTCFullYear()}-${String(x.getUTCMonth()+1).padStart(2,"0")}-${String(x.getUTCDate()).padStart(2,"0")}`;
-  return [f(s), f(e)];
+/* حدود الدورة الحالية: تُحسب من CYCLE_START بخطوات 14 يوماً.
+   قبل بداية الدورة الأولى تُعرض الدورة الأولى. */
+const isoOf = x => `${x.getUTCFullYear()}-${String(x.getUTCMonth()+1).padStart(2,"0")}-${String(x.getUTCDate()).padStart(2,"0")}`;
+const toUTC = iso => { const [y,m,d] = iso.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)); };
+const addDays = (iso, n) => { const d = toUTC(iso); d.setUTCDate(d.getUTCDate()+n); return isoOf(d); };
+const diffDays = (a, b) => Math.round((toUTC(b) - toUTC(a)) / 86400000);
+
+function cycleBounds(dateIso){
+  const n = diffDays(CYCLE_START, dateIso);
+  const idx = n < 0 ? 0 : Math.floor(n / CYCLE_DAYS);
+  const st = addDays(CYCLE_START, idx * CYCLE_DAYS);
+  return [st, addDays(st, CYCLE_DAYS - 1)];
 }
 
 /* سبب المنع — فارغ يعني مسموح */
 function blockReason(teacher, period, className, stype){
   if(!teacher) return "";
   const used = usedByTeacher(teacher);
-  const base = quotaOf(teacher), roll = rolloverOf(teacher), eff = base + roll;
+  const base = quotaOf(), roll = rolloverOf(teacher), eff = base + roll;
   // قاعدة «حصة واحدة في اليوم» — والمدوّر معفى منها
   if(ONE_PER_DAY && bookedSameDay(teacher) && !(roll > 0 && used < eff))
     return `لديكِ حجز في ${dayLabel(bookDate)} بالفعل — لا يُسمح بحصتين في اليوم نفسه.`;
   if(used >= eff && !surplusOpen())
-    return `استهلكتِ رصيدك الأسبوعي (${eff} ${eff===1?"حصة":"حصص"}${roll?" مع المدوّر":""}). الحصص المتبقية تُفتح للجميع بعد نهاية الحصة ${PERIODS[SURPLUS_AFTER_PERIOD-1]}.`;
+    return `استهلكتِ رصيدك في هذه الدورة (${eff} ${eff===1?"حصة":"حصص"}${roll?" مع المدوّر":""}). الحصص المتبقية تُفتح للجميع بعد نهاية الحصة ${PERIODS[SURPLUS_AFTER_PERIOD-1]}.`;
   const open = firstOpenDay();
   if(open && bookDate !== open)
     return `الحجز متاح في ${dayLabel(open)}. لا يُفتح اليوم التالي إلا إذا امتلأ الذي قبله.`;
@@ -573,9 +594,9 @@ async function book(rec){
   });
 }
 
-async function cancel(period){
-  if(DEMO){ delete demoStore[`${bookDate}_p${period}`]; week = Object.values(demoStore); indexDay(); render(); return; }
-  await fs.deleteDoc(fs.doc(db,COLLECTION,`${bookDate}_p${period}`));
+async function cancel(date, period){
+  if(DEMO){ delete demoStore[`${date}_p${period}`]; splitWeeks(Object.values(demoStore)); indexDay(); render(); return; }
+  await fs.deleteDoc(fs.doc(db,COLLECTION,`${date}_p${period}`));
 }
 
 /* مهلة الإلغاء: القواعد تفرضها على الخادم، وهذا الفحص لإخفاء الزر فقط */
@@ -595,13 +616,14 @@ function render(){
 
   // شريط الرصيد
   if(teacher){
-    const used = usedByTeacher(teacher), base = quotaOf(teacher),
+    const used = usedByTeacher(teacher), base = quotaOf(),
           roll = rolloverOf(teacher), eff = base + roll, out = used >= eff;
     $("quota").className = "quota" + (out ? " out" : "");
-    $("quota").innerHTML = `${isCore(teacher) ? "مواد أساسية" : "رصيد عام"} — استخدمتِ <b>${used} من ${eff}</b> هذا الأسبوع` +
+    $("quota").innerHTML = `رصيدك في هذه الدورة: <b>${used} من ${eff}</b>` +
       (roll ? ` <span class="roll">(${base} + ${roll} مدوّر)</span>` : "") +
       (out ? (surplusOpen() ? " · الحصص المتبقية مفتوحة للجميع الآن"
                             : ` · الفائض يُفتح بعد الحصة ${PERIODS[SURPLUS_AFTER_PERIOD-1]}`) : "");
+
   } else $("quota").textContent = "";
 
   // زرّ «ما في مكان» — يظهر فقط إذا كانت كل حصص اليوم محجوزة فعلاً
@@ -610,7 +632,7 @@ function render(){
   if(showFull){
     const done = askedToday(teacher);
     $("askBtn").disabled = done;
-    $("askBtn").textContent = done ? "✅ تم تسجيل طلبك" : "🔖 سجّلي طلبك — الأسبوع ممتلئ";
+    $("askBtn").textContent = done ? "✅ تم تسجيل طلبك" : "🔖 سجّلي طلبك — الدورة ممتلئة";
   }
 
   // الأيام المتاحة مع عدّاد الشواغر
@@ -676,7 +698,29 @@ function render(){
   if(keepType && !(keepType === TABLET_TYPE && noTablet(curP))) stypeSel.value = keepType;
   stypeSel.disabled = !klassSel.value || !!gate;
 
-  // استهلاك الشعب هذا الأسبوع
+  // حجوزات المعلّمة في هذه الدورة
+  const mine = teacher
+    ? week.filter(b => b.teacher === teacher)
+          .sort((a,b) => a.date === b.date ? a.period - b.period : (a.date < b.date ? -1 : 1))
+    : [];
+  $("mine").innerHTML = mine.length ? `<div class="mine"><h3>حجوزاتك في هذه الدورة (${mine.length})</h3><ul>` +
+    mine.map(b => {
+      const past = isPast(b.date, b.period);
+      return `<li><span>${dayLabel(b.date)} — الحصة ${PERIODS[b.period-1]}
+        <span class="det">${esc(b.className)}${b.subject ? " · " + esc(b.subject) : ""}${b.lessonTitle ? " · " + esc(b.lessonTitle) : ""}</span></span>` +
+        (past ? `<span class="done">انتهت</span>`
+              : `<button type="button" class="cancel" data-d="${b.date}" data-p="${b.period}">إلغاء</button>`) +
+        `</li>`;
+    }).join("") + `</ul></div>` : "";
+
+  // حصص الدورة المتبقية لكل يوم
+  $("dayUse").innerHTML = days.length ? days.map(({iso}) => {
+    const f = freeCount(iso);
+    return `<li><span class="p">${dayLabel(iso)}</span><span class="${f?"free":"over"}">${
+      f ? `${f} من ${PERIODS.length} متاحة` : "مكتمل"}</span></li>`;
+  }).join("") : `<li><span class="free">لا أيام متبقية في هذه الدورة</span></li>`;
+
+  // استهلاك الشعب في هذه الدورة
   $("classUse").innerHTML = CLASSES.map(c=>{
     const n = usedByClass(c);
     return `<li><span class="p">${c}</span><span class="${n>=CLASS_CAP?"over":"free"}">${n} من ${CLASS_CAP}</span></li>`;
@@ -692,8 +736,7 @@ function render(){
         extra ? `<br><span class="sub">${esc(extra)}</span>` : ``}${
         b.sessionType ? `<br><span class="tag">${esc(b.sessionType)}</span>` : ``}${
         b.lessonLink ? `<br><a class="lnk" href="${esc(b.lessonLink)}" target="_blank" rel="noopener noreferrer">🔗 ${esc(linkHost(b.lessonLink))}</a>` : ``}</span>
-      <span class="stamp ${justBooked===i+1?"new":""}">محجوزة</span>${
-        canCancel(b) ? `<button type="button" class="cancel" data-cancel="${i+1}">إلغاء</button>` : ``}
+      <span class="stamp ${justBooked===i+1?"new":""}">محجوزة</span>
     </span></li>`;
   }).join("");
   justBooked = null;
@@ -726,18 +769,23 @@ subjectSel.addEventListener("change",updateBtn);
 stypeSel.addEventListener("change",updateBtn);
 lessonInp.addEventListener("input",updateBtn);
 
-$("slots").addEventListener("click", async e=>{
-  const b = e.target.closest("[data-cancel]");
+$("mine").addEventListener("click", async e=>{
+  const b = e.target.closest(".cancel");
   if(!b) return;
-  const period = +b.dataset.cancel, rec = bookings[period];
-  if(!confirm(`إلغاء حجز الحصة ${PERIODS[period-1]} (${rec.teacher} – ${rec.className})؟`)) return;
+  const d = b.dataset.d, period = +b.dataset.p;
+  const rec = week.find(x => x.date === d && x.period === period);
+  if(!rec) return;
+  if(isPast(d, period)){
+    msg.className="msg err"; msg.textContent="بدأت هذه الحصة، لم يعد الإلغاء ممكناً."; render(); return;
+  }
+  if(!confirm(`إلغاء حجز ${dayLabel(d)} — الحصة ${PERIODS[period-1]} (${rec.className})؟ سيعود إلى رصيدك.`)) return;
   b.disabled = true; b.textContent = "…";
   try{
-    await cancel(period);
-    msg.className="msg ok"; msg.textContent=`أُلغي حجز الحصة ${PERIODS[period-1]}.`;
+    await cancel(d, period);
+    msg.className="msg ok"; msg.textContent="أُلغي الحجز وعاد إلى رصيدك.";
   }catch(err){
     msg.className="msg err";
-    msg.textContent = `تعذّر الإلغاء. يُسمح بالإلغاء خلال ${CANCEL_HOURS} ساعة من الحجز فقط — بعدها راجعي إدارة المدرسة.`;
+    msg.textContent = "تعذّر الإلغاء. يُسمح بإلغاء الحجوزات القادمة فقط.";
     b.disabled = false; b.textContent = "إلغاء";
   }
 });
@@ -749,11 +797,11 @@ $("askBtn").addEventListener("click", async ()=>{
   try{
     await logRequest(t);
     msg.className = "msg ok";
-    msg.textContent = "سُجّل طلبك. ستحصلين على حصة إضافية في رصيد الأسبوع القادم.";
+    msg.textContent = "سُجّل طلبك. ستحصلين على حصة إضافية في رصيد الدورة القادمة.";
   }catch(err){
     msg.className = "msg err";
     msg.textContent = "تعذّر تسجيل الطلب. حاولي مرة أخرى.";
-    $("askBtn").disabled = false; $("askBtn").textContent = "🔖 سجّلي طلبك — الأسبوع ممتلئ";
+    $("askBtn").disabled = false; $("askBtn").textContent = "🔖 سجّلي طلبك — الدورة ممتلئة";
   }
 });
 
@@ -784,6 +832,8 @@ $("bookForm").addEventListener("submit", async e=>{
     sessionType: stypeSel.value
   };
   if(link) rec.lessonLink = link;
+  const st = periodStart(bookDate, period);
+  if(st) rec.startsAt = st;
   const why = blockReason(rec.teacher, period, rec.className, rec.sessionType);
   if(why){ render(); msg.className="msg err"; msg.textContent = why; return; }
   btn.disabled = true; msg.className="msg"; msg.textContent="جارٍ الحجز…";
@@ -947,19 +997,18 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{
   schedule = scheduleFor(bookDate);
   baseMin  = t.hh*60 + t.mi;
   baseAt   = Date.now();
-  [weekStart, weekEnd] = weekBounds(t.y, t.m, t.d, t.dow);
-  const back = new Date(Date.UTC(t.y, t.m-1, t.d)); back.setUTCDate(back.getUTCDate() - 7);
-  [prevStart, prevEnd] = weekBounds(back.getUTCFullYear(), back.getUTCMonth()+1, back.getUTCDate(), t.dow);
+  [weekStart, weekEnd] = cycleBounds(today);                  // الدورة الحالية
+  [prevStart, prevEnd] = cycleBounds(addDays(weekStart, -1));  // الدورة السابقة
 
   $("dayName").textContent = DAYS[t.dow];
   $("dateStr").textContent = `${t.d}/${t.m}/${t.y}`;
   $("shiftStr").textContent = `الفترة ${shiftName(today)} — الحصص من ${schedule[0][0]} إلى ${schedule[schedule.length-1][1]}`;
-  $("weekStr").textContent = `أسبوع ${weekStart} إلى ${weekEnd} (يبدأ الأحد)`;
+  $("weekStr").textContent = `الدورة الحالية: ${dayLabel(weekStart)} ← ${dayLabel(weekEnd)} (${CYCLE_DAYS} يوماً)`;
   $("timeSrc").textContent = t.src;
 
   await initDB();
   if(!openDays().length){
-    $("banner").innerHTML += `<div class="banner closed">انتهى أسبوع الحجز. يفتح الحجز من جديد يوم الأحد.</div>`;
+    $("banner").innerHTML += `<div class="banner closed">انتهت أيام هذه الدورة. تبدأ الدورة التالية قريباً.</div>`;
     [teacherSel,daySel,periodSel,klassSel,subjectSel,lessonInp,stypeSel,btn].forEach(el=>el.disabled=true);
   }
   listen();
