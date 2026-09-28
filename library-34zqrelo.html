@@ -122,9 +122,14 @@
   @page day { size: A4 portrait;  margin: 18mm 16mm; }
 
   @media print{
-    body{background:#fff;color:#000}
-    .wrap{max-width:none;padding:0}
+    html,body{width:auto;margin:0;background:#fff;color:#000}
+    .wrap{width:auto;max-width:none;margin:0;padding:0;overflow:visible}
     header,.tabs{display:none !important}
+
+    /* الحاويات لا تقصّ المحتوى على الورق مهما كان الوضع */
+    .tablewrap{overflow:visible !important;border:0}
+    table{max-width:100%}
+    th,td{white-space:normal;word-break:break-word}
 
     .printhead{display:none}
     .printhead .org{font-size:.85rem;color:#444;margin:0;letter-spacing:.02em}
@@ -958,20 +963,21 @@ function setRange(from, to){ $("from").value = from; $("to").value = to; loadRep
 $("printBtn").addEventListener("click", ()=>{
   const now = new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Amman",dateStyle:"short",timeStyle:"short"}).format(new Date());
   $("printedOn").textContent = `طُبع بتاريخ ${now} (توقيت عمّان)`;
+  document.body.classList.remove("print-day");
   document.body.classList.add("print-report");
+  // لا مؤقّت: الصنف لا يؤثّر على الشاشة إطلاقاً، ويُزال عند إغلاق نافذة الطباعة.
   const off = () => { document.body.classList.remove("print-report"); window.removeEventListener("afterprint", off); };
   window.addEventListener("afterprint", off);
-  setTimeout(() => window.print(), 50);
-  setTimeout(off, 3000);
+  setTimeout(() => window.print(), 60);
 });
 
 $("printDayBtn").addEventListener("click", ()=>{
   $("dayPrintSub").textContent = `${dayLabel(bookDate)} — الفترة ${shiftName(bookDate)}`;
+  document.body.classList.remove("print-report");
   document.body.classList.add("print-day");
   const off = () => { document.body.classList.remove("print-day"); window.removeEventListener("afterprint", off); };
   window.addEventListener("afterprint", off);
-  setTimeout(() => window.print(), 50);
-  setTimeout(off, 3000);   // احتياط لو لم يُطلق المتصفح afterprint
+  setTimeout(() => window.print(), 60);
 });
 
 document.querySelectorAll(".quick button").forEach(b=>b.addEventListener("click", ()=>{
