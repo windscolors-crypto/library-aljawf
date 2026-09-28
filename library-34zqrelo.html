@@ -117,96 +117,75 @@
   /* ===== الطباعة ===== */
   .signrow{display:none}
 
-  /* ═══════════ الطباعة ═══════════ */
-  @page rep { size: A4 landscape; margin: 12mm 10mm 14mm; }
-  @page day { size: A4 portrait;  margin: 18mm 16mm; }
+  /* ═══════════ الطباعة ═══════════
+     لا تعتمد على أي صنف JS: التبويب المخفي (hidden) لا يُطبع أصلاً،
+     وترويسة كل قسم داخله فتظهر معه تلقائياً. */
+  @page { size: A4 landscape; margin: 10mm 9mm 12mm; }
+  @page day { size: A4 portrait; margin: 16mm 14mm; }
+  body.print-day{page:day}
 
   @media print{
-    html,body{width:auto;margin:0;background:#fff;color:#000}
-    .wrap{width:auto;max-width:none;margin:0;padding:0;overflow:visible}
-    header,.tabs{display:none !important}
+    html,body{width:100% !important;max-width:100% !important;
+              margin:0 !important;padding:0 !important;background:#fff;color:#000}
+    .wrap{width:100% !important;max-width:100% !important;
+          margin:0 !important;padding:0 !important;overflow:visible !important}
 
-    /* الحاويات لا تقصّ المحتوى على الورق مهما كان الوضع */
-    .tablewrap{overflow:visible !important;border:0}
-    table{max-width:100%}
-    th,td{white-space:normal;word-break:break-word}
+    /* ما لا يُطبع أبداً */
+    header,.tabs,.filters,#mine,#dayUse,#classUse,#fullBox,
+    .printday,.cancel,#bookForm{display:none !important}
 
-    .printhead{display:none}
-    .printhead .org{font-size:.85rem;color:#444;margin:0;letter-spacing:.02em}
-    .printhead .sch{font-size:1rem;font-weight:700;margin:2px 0 0}
-    .printhead .t{font-size:1.35rem;font-weight:700;margin:8px 0 0;color:#1A3A6B}
-    .printhead .s{font-size:.85rem;color:#444;margin:3px 0 0}
+    /* الترويسات */
+    .printhead{display:block;border-bottom:2.5px solid #C9952A;
+               padding-bottom:8px;margin-bottom:12px;text-align:center}
+    .printhead .org{font-size:.8rem;color:#444;margin:0}
+    .printhead .sch{font-size:.95rem;font-weight:700;margin:2px 0 0}
+    .printhead .t{font-size:1.3rem;font-weight:700;margin:7px 0 0;color:#1A3A6B}
+    .printhead .s{font-size:.8rem;color:#444;margin:2px 0 0}
 
-    /* ── وضع تقرير الفترة (أفقي) ── */
-    body.print-report{page:rep}
-    body:not(.print-day) .filters,
-    body:not(.print-day) #view-book{display:none !important}
-    body.print-report #repPrintHead{display:block;border-bottom:2.5px solid #C9952A;
-                                    padding-bottom:9px;margin-bottom:14px;text-align:center}
-    body.print-report .sumgrid{grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
-    body.print-report .sumcard{border:1px solid #BBB;padding:7px 4px;border-radius:5px}
-    body.print-report .sumcard .n{font-size:1.15rem}
-    body.print-report .sumcard .l{font-size:.7rem}
+    /* بطاقات الملخّص */
+    .sumgrid{display:grid !important;grid-template-columns:repeat(6,1fr) !important;
+             gap:5px !important;margin-bottom:12px !important}
+    .sumcard{border:1px solid #BBB;padding:6px 3px;border-radius:4px;box-shadow:none}
+    .sumcard .n{font-size:1.05rem}
+    .sumcard .l{font-size:.65rem}
 
-    body.print-report .tablewrap{border:0;overflow:visible}
-    body.print-report table{width:100%;table-layout:fixed;font-size:.7rem;border-collapse:collapse}
-    body.print-report th,
-    body.print-report td{white-space:normal;word-break:break-word;padding:4px 5px;
-                         border:1px solid #BBB;vertical-align:top;line-height:1.45}
-    body.print-report thead{display:table-header-group}          /* تتكرر الترويسة كل صفحة */
-    body.print-report th{background:#EEF2F8 !important;color:#1A3A6B;font-size:.7rem;
-                         -webkit-print-color-adjust:exact;print-color-adjust:exact}
-    body.print-report tr{page-break-inside:avoid}
+    /* الجداول: لا تتجاوز عرض الصفحة أبداً */
+    .tablewrap{overflow:visible !important;border:0 !important;background:none}
+    table{width:100% !important;max-width:100% !important;
+          table-layout:fixed !important;border-collapse:collapse !important;font-size:.68rem}
+    thead{display:table-header-group}
+    tr{page-break-inside:avoid}
+    th,td{white-space:normal !important;word-break:break-word !important;
+          overflow-wrap:anywhere !important;padding:3px 4px !important;
+          border:1px solid #BBB !important;vertical-align:top;line-height:1.4}
+    th{background:#EEF2F8 !important;color:#1A3A6B;
+       -webkit-print-color-adjust:exact;print-color-adjust:exact}
 
     /* عرض أعمدة جدول التفصيل — المجموع 100% */
-    body.print-report #repTable th:nth-child(1),
-    body.print-report #repTable td:nth-child(1){width:8%}
-    body.print-report #repTable th:nth-child(2),
-    body.print-report #repTable td:nth-child(2){width:6%}
-    body.print-report #repTable th:nth-child(3),
-    body.print-report #repTable td:nth-child(3){width:6%}
-    body.print-report #repTable th:nth-child(4),
-    body.print-report #repTable td:nth-child(4){width:7%}
-    body.print-report #repTable th:nth-child(5),
-    body.print-report #repTable td:nth-child(5){width:13%}
-    body.print-report #repTable th:nth-child(6),
-    body.print-report #repTable td:nth-child(6){width:7%}
-    body.print-report #repTable th:nth-child(7),
-    body.print-report #repTable td:nth-child(7){width:11%}
-    body.print-report #repTable th:nth-child(8),
-    body.print-report #repTable td:nth-child(8){width:19%}
-    body.print-report #repTable th:nth-child(9),
-    body.print-report #repTable td:nth-child(9){width:10%}
-    body.print-report #repTable th:nth-child(10),
-    body.print-report #repTable td:nth-child(10){width:7%}
-    body.print-report #repTable th:nth-child(11),
-    body.print-report #repTable td:nth-child(11){width:6%}
+    #repTable th:nth-child(1),#repTable td:nth-child(1){width:8%}
+    #repTable th:nth-child(2),#repTable td:nth-child(2){width:6%}
+    #repTable th:nth-child(3),#repTable td:nth-child(3){width:6%}
+    #repTable th:nth-child(4),#repTable td:nth-child(4){width:7%}
+    #repTable th:nth-child(5),#repTable td:nth-child(5){width:13%}
+    #repTable th:nth-child(6),#repTable td:nth-child(6){width:7%}
+    #repTable th:nth-child(7),#repTable td:nth-child(7){width:11%}
+    #repTable th:nth-child(8),#repTable td:nth-child(8){width:19%}
+    #repTable th:nth-child(9),#repTable td:nth-child(9){width:10%}
+    #repTable th:nth-child(10),#repTable td:nth-child(10){width:7%}
+    #repTable th:nth-child(11),#repTable td:nth-child(11){width:6%}
 
-    body.print-report h2{margin:14px 0 6px;font-size:.95rem;page-break-after:avoid}
-    body.print-report .bar{background:#1A3A6B !important;
-                           -webkit-print-color-adjust:exact;print-color-adjust:exact}
-    body.print-report a.lnk{color:#000;text-decoration:underline}
-    body.print-report .signrow{display:flex;justify-content:space-around;gap:40px;
-                               margin-top:26px;font-size:.8rem;text-align:center;page-break-inside:avoid}
-    body.print-report .sigline{display:block;border-top:1px solid #666;width:150px;margin:0 auto 5px;padding-top:26px}
+    h2{margin:12px 0 5px !important;font-size:.9rem;page-break-after:avoid}
+    .bar{background:#1A3A6B !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    a.lnk{color:#000;text-decoration:underline}
 
-    /* ── وضع جدول اليوم (عمودي) ── */
-    body.print-day{page:day}
-    body.print-day #view-report,
-    body.print-day form,
-    body.print-day #mine,
-    body.print-day #dayUse,
-    body.print-day #classUse,
-    body.print-day #fullBox,
-    body.print-day .h2row .printday{display:none !important}
-    body.print-day #dayPrintHead{display:block;border-bottom:2.5px solid #C9952A;
-                                 padding-bottom:9px;margin-bottom:16px;text-align:center}
-    body:not(.print-day) #dayPrintHead{display:none !important}
-    body.print-day .slots li{page-break-inside:avoid;padding:13px 4px;border-bottom:1px solid #999}
-    body.print-day .slots .sub,
-    body.print-day .slots .tag{color:#000 !important}
-    body.print-day .cancel,
-    body.print-day a.lnk{display:none !important}
+    .signrow{display:flex !important;justify-content:space-around;gap:40px;
+             margin-top:22px;font-size:.78rem;text-align:center;page-break-inside:avoid}
+    .sigline{display:block;border-top:1px solid #666;width:145px;margin:0 auto 4px;padding-top:24px}
+
+    /* جدول اليوم (عند الطباعة من تبويب الحجز) */
+    .slots li{page-break-inside:avoid;padding:11px 4px;border-bottom:1px solid #999}
+    .slots .sub,.slots .tag{color:#000 !important}
+    #slots a.lnk{display:none !important}
   }
 
 </style>
@@ -1096,10 +1075,14 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{
   const rep = t.dataset.view === "report";
   $("view-book").hidden = rep;
   $("view-report").hidden = !rep;
-  if(rep && !$("from").value){
-    const [y,m] = today.split("-").map(Number), pad = n=>String(n).padStart(2,"0");
-    const last = new Date(Date.UTC(y,m,0)).getUTCDate();
-    setRange(`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(last)}`);   // الشهر كاملاً
+  if(rep){
+    if(!$("from").value){
+      const [y,m] = today.split("-").map(Number), pad = n=>String(n).padStart(2,"0");
+      const last = new Date(Date.UTC(y,m,0)).getUTCDate();
+      setRange(`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(last)}`);   // الشهر كاملاً
+    } else {
+      loadReport();   // تحديث عند كل فتح للتبويب
+    }
   }
 }));
 
