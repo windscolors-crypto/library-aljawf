@@ -108,24 +108,102 @@
   .bar{height:8px;background:var(--shelf);border-radius:4px;min-width:3px;display:inline-block;vertical-align:middle}
   .empty{color:var(--muted);text-align:center;padding:24px}
   .printhead{display:none}
+  .h2row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:28px 0 10px}
+  .h2row h2{margin:0}
+  .printday{width:auto;padding:8px 14px;font-size:.85rem;font-weight:500;
+            background:#fff;color:var(--shelf);border:1px solid var(--line)}
+  .printday:hover{background:var(--shelf-soft)}
 
   /* ===== الطباعة ===== */
+  .signrow{display:none}
+
+  /* ═══════════ الطباعة ═══════════ */
+  @page rep { size: A4 landscape; margin: 12mm 10mm 14mm; }
+  @page day { size: A4 portrait;  margin: 18mm 16mm; }
+
   @media print{
-    @page{size:A4;margin:14mm}
-    body{background:#fff}
+    body{background:#fff;color:#000}
     .wrap{max-width:none;padding:0}
-    header,.tabs,.filters,#view-book{display:none !important}
-    .printhead{display:block;border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:16px}
-    .printhead .t{font-size:1.2rem;font-weight:700;margin:0}
-    .printhead .s{font-size:.9rem;color:var(--muted);margin:2px 0 0}
-    h2{margin:18px 0 8px;page-break-after:avoid}
-    .tablewrap{border:0;overflow:visible}
-    table{font-size:.82rem}
-    th{background:#EEF2F8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    tr{page-break-inside:avoid}
-    .sumgrid{grid-template-columns:repeat(4,1fr)}
-    .bar{background:#1A3A6B !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    header,.tabs{display:none !important}
+
+    .printhead{display:none}
+    .printhead .org{font-size:.85rem;color:#444;margin:0;letter-spacing:.02em}
+    .printhead .sch{font-size:1rem;font-weight:700;margin:2px 0 0}
+    .printhead .t{font-size:1.35rem;font-weight:700;margin:8px 0 0;color:#1A3A6B}
+    .printhead .s{font-size:.85rem;color:#444;margin:3px 0 0}
+
+    /* ── وضع تقرير الفترة (أفقي) ── */
+    body.print-report{page:rep}
+    body:not(.print-day) .filters,
+    body:not(.print-day) #view-book{display:none !important}
+    body.print-report #repPrintHead{display:block;border-bottom:2.5px solid #C9952A;
+                                    padding-bottom:9px;margin-bottom:14px;text-align:center}
+    body.print-report .sumgrid{grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
+    body.print-report .sumcard{border:1px solid #BBB;padding:7px 4px;border-radius:5px}
+    body.print-report .sumcard .n{font-size:1.15rem}
+    body.print-report .sumcard .l{font-size:.7rem}
+
+    body.print-report .tablewrap{border:0;overflow:visible}
+    body.print-report table{width:100%;table-layout:fixed;font-size:.7rem;border-collapse:collapse}
+    body.print-report th,
+    body.print-report td{white-space:normal;word-break:break-word;padding:4px 5px;
+                         border:1px solid #BBB;vertical-align:top;line-height:1.45}
+    body.print-report thead{display:table-header-group}          /* تتكرر الترويسة كل صفحة */
+    body.print-report th{background:#EEF2F8 !important;color:#1A3A6B;font-size:.7rem;
+                         -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body.print-report tr{page-break-inside:avoid}
+
+    /* عرض أعمدة جدول التفصيل — المجموع 100% */
+    body.print-report #repTable th:nth-child(1),
+    body.print-report #repTable td:nth-child(1){width:8%}
+    body.print-report #repTable th:nth-child(2),
+    body.print-report #repTable td:nth-child(2){width:6%}
+    body.print-report #repTable th:nth-child(3),
+    body.print-report #repTable td:nth-child(3){width:6%}
+    body.print-report #repTable th:nth-child(4),
+    body.print-report #repTable td:nth-child(4){width:7%}
+    body.print-report #repTable th:nth-child(5),
+    body.print-report #repTable td:nth-child(5){width:13%}
+    body.print-report #repTable th:nth-child(6),
+    body.print-report #repTable td:nth-child(6){width:7%}
+    body.print-report #repTable th:nth-child(7),
+    body.print-report #repTable td:nth-child(7){width:11%}
+    body.print-report #repTable th:nth-child(8),
+    body.print-report #repTable td:nth-child(8){width:19%}
+    body.print-report #repTable th:nth-child(9),
+    body.print-report #repTable td:nth-child(9){width:10%}
+    body.print-report #repTable th:nth-child(10),
+    body.print-report #repTable td:nth-child(10){width:7%}
+    body.print-report #repTable th:nth-child(11),
+    body.print-report #repTable td:nth-child(11){width:6%}
+
+    body.print-report h2{margin:14px 0 6px;font-size:.95rem;page-break-after:avoid}
+    body.print-report .bar{background:#1A3A6B !important;
+                           -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body.print-report a.lnk{color:#000;text-decoration:underline}
+    body.print-report .signrow{display:flex;justify-content:space-around;gap:40px;
+                               margin-top:26px;font-size:.8rem;text-align:center;page-break-inside:avoid}
+    body.print-report .sigline{display:block;border-top:1px solid #666;width:150px;margin:0 auto 5px;padding-top:26px}
+
+    /* ── وضع جدول اليوم (عمودي) ── */
+    body.print-day{page:day}
+    body.print-day #view-report,
+    body.print-day form,
+    body.print-day #mine,
+    body.print-day #dayUse,
+    body.print-day #classUse,
+    body.print-day #fullBox,
+    body.print-day .h2row .printday{display:none !important}
+    body.print-day #dayPrintHead{display:block;border-bottom:2.5px solid #C9952A;
+                                 padding-bottom:9px;margin-bottom:16px;text-align:center}
+    body:not(.print-day) #dayPrintHead{display:none !important}
+    body.print-day .slots li{page-break-inside:avoid;padding:13px 4px;border-bottom:1px solid #999}
+    body.print-day .slots .sub,
+    body.print-day .slots .tag{color:#000 !important}
+    body.print-day .cancel,
+    body.print-day a.lnk{display:none !important}
   }
+
 </style>
 </head>
 <body>
@@ -202,7 +280,15 @@
 
     <div id="mine"></div>
 
-    <h2 id="slotsTitle">جدول المكتبة اليوم</h2>
+    <div class="h2row">
+      <h2 id="slotsTitle">جدول المكتبة اليوم</h2>
+      <button type="button" class="printday" id="printDayBtn">🖨️ اطبعي جدول اليوم</button>
+    </div>
+
+    <div class="printhead" id="dayPrintHead">
+      <p class="t">جدول حجز المكتبة — مدرسة إناث الجوفة الإعدادية</p>
+      <p class="s" id="dayPrintSub"></p>
+    </div>
     <ul class="slots" id="slots"></ul>
 
     <h2>حصص الدورة المتبقية لكل يوم</h2>
@@ -228,9 +314,12 @@
       <div class="msg" id="repMsg" role="status" aria-live="polite"></div>
     </div>
 
-    <div class="printhead">
-      <p class="t">تقرير حجز المكتبة – مدرسة إناث الجوفة الإعدادية</p>
+    <div class="printhead" id="repPrintHead">
+      <p class="org">وكالة الغوث الدولية</p>
+      <p class="sch">مدرسة إناث الجوفة الإعدادية — مكتبة المدرسة</p>
+      <p class="t">تقرير حجز المكتبة</p>
       <p class="s" id="printRange"></p>
+      <p class="s" id="printedOn"></p>
     </div>
 
     <div class="sumgrid" id="repSummary"></div>
@@ -249,6 +338,11 @@
 
     <h2>حسب نوع الحصة</h2>
     <div class="tablewrap"><table id="repTypes"></table></div>
+
+    <div class="signrow" id="signRow">
+      <div><span class="sigline"></span>أمينة المكتبة</div>
+      <div><span class="sigline"></span>مديرة المدرسة</div>
+    </div>
 
     <h2>الطلبات غير الملبّاة</h2>
     <p class="muted" style="margin:-4px 0 10px;font-size:.85rem">معلمات فتحن الصفحة ولم يجدن حصة شاغرة، فسجّلن طلبهنّ.</p>
@@ -861,7 +955,24 @@ const shiftOf = iso => EVENING_MONTHS.includes(+iso.split("-")[1]) ? "مسائي
 
 function setRange(from, to){ $("from").value = from; $("to").value = to; loadReport(); }
 
-$("printBtn").addEventListener("click", ()=>window.print());
+$("printBtn").addEventListener("click", ()=>{
+  const now = new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Amman",dateStyle:"short",timeStyle:"short"}).format(new Date());
+  $("printedOn").textContent = `طُبع بتاريخ ${now} (توقيت عمّان)`;
+  document.body.classList.add("print-report");
+  const off = () => { document.body.classList.remove("print-report"); window.removeEventListener("afterprint", off); };
+  window.addEventListener("afterprint", off);
+  setTimeout(() => window.print(), 50);
+  setTimeout(off, 3000);
+});
+
+$("printDayBtn").addEventListener("click", ()=>{
+  $("dayPrintSub").textContent = `${dayLabel(bookDate)} — الفترة ${shiftName(bookDate)}`;
+  document.body.classList.add("print-day");
+  const off = () => { document.body.classList.remove("print-day"); window.removeEventListener("afterprint", off); };
+  window.addEventListener("afterprint", off);
+  setTimeout(() => window.print(), 50);
+  setTimeout(off, 3000);   // احتياط لو لم يُطلق المتصفح afterprint
+});
 
 document.querySelectorAll(".quick button").forEach(b=>b.addEventListener("click", ()=>{
   const [y,m] = today.split("-").map(Number);
@@ -881,6 +992,7 @@ async function loadReport(){
   if(from > to){ repMsg.className="msg err"; repMsg.textContent="تاريخ البداية بعد تاريخ النهاية."; return; }
   repMsg.className="msg"; repMsg.textContent="جارٍ تحميل السجل…";
   $("printRange").textContent = `الفترة من ${from} إلى ${to}`;
+  $("signRow").dataset.ready = "1";
 
   let rows = [], reqs = [];
   try{
@@ -915,8 +1027,8 @@ function renderReport(rows, reqs, from, to){
   const fullDays = Object.keys(perDay).filter(d => perDay[d].size >= PERIODS.length);
 
   const reqTable = () => reqs.length
-    ? `<tr><th>التاريخ</th><th>اليوم</th><th>المعلّمة</th></tr>` +
-      reqs.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${esc(r.teacher)}</td></tr>`).join("")
+    ? `<thead><tr><th>التاريخ</th><th>اليوم</th><th>المعلّمة</th></tr></thead><tbody>` +
+      reqs.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${esc(r.teacher)}</td></tr>`).join("") + `</tbody>`
     : `<tr><td class="empty">لا توجد طلبات — كل من أرادت حصة وجدتها.</td></tr>`;
 
   const days = new Set(rows.map(r=>r.date));
@@ -953,16 +1065,16 @@ function renderReport(rows, reqs, from, to){
   };
   const dash = v => v ? esc(v) : "—";
   $("repTable").innerHTML =
-    `<tr><th>التاريخ</th><th>اليوم</th><th>الفترة</th><th>الحصة</th><th>المعلّمة</th><th>الصف</th><th>المادة</th><th>عنوان الدرس</th><th>نوع الحصة</th><th>الرابط</th><th>وقت الحجز</th></tr>` +
+    `<thead><tr><th>التاريخ</th><th>اليوم</th><th>الفترة</th><th>الحصة</th><th>المعلّمة</th><th>الصف</th><th>المادة</th><th>عنوان الدرس</th><th>نوع الحصة</th><th>الرابط</th><th>وقت الحجز</th></tr></thead><tbody>` +
     rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${dowOf(r.date)}</td><td>${shiftOf(r.date)}</td><td>${PERIODS[r.period-1]||r.period}</td><td>${esc(r.teacher)}</td><td>${esc(r.className)}</td><td>${dash(r.subject)}</td><td style="white-space:normal">${dash(r.lessonTitle)}</td><td>${dash(r.sessionType)}</td><td>${
       r.lessonLink ? `<a class="lnk" href="${esc(r.lessonLink)}" target="_blank" rel="noopener noreferrer">${esc(linkHost(r.lessonLink))}</a>` : "—"
-    }</td><td>${fmt(r.createdAt)}</td></tr>`).join("");
+    }</td><td>${fmt(r.createdAt)}</td></tr>`).join("") + `</tbody>`;
 
   const tally = (obj, head) => {
     const items = Object.entries(obj).sort((a,b)=>b[1]-a[1]);
     const max = items[0][1];
-    return `<tr><th>${head}</th><th>عدد الحصص</th><th></th></tr>` + items.map(([k,v])=>
-      `<tr><td>${esc(k)}</td><td>${v}</td><td style="width:45%"><span class="bar" style="width:${Math.round(v/max*100)}%"></span></td></tr>`).join("");
+    return `<thead><tr><th>${head}</th><th>عدد الحصص</th><th></th></tr></thead><tbody>` + items.map(([k,v])=>
+      `<tr><td>${esc(k)}</td><td>${v}</td><td style="width:45%"><span class="bar" style="width:${Math.round(v/max*100)}%"></span></td></tr>`).join("") + `</tbody>`;
   };
   $("repRequests").innerHTML = reqTable();
   $("repTeachers").innerHTML = tally(byTeacher, "المعلّمة");
