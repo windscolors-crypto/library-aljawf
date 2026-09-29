@@ -1,0 +1,23 @@
+    // ===== ماراثون القراءة — 29/9/2026 =====
+    // التسجيل مفتوح 07:00–11:00 بتوقيت عمّان (04:00–08:00 UTC)،
+    // أي قبل البداية (07:30) بنصف ساعة للتجربة وبعد النهاية (10:30) بنصف ساعة للتسجيلات المتأخرة.
+    match /marathon_entries/{id} {
+      allow read: if true;
+      allow create: if
+        request.time >= timestamp.date(2026, 9, 29) + duration.value(4, 'h')
+        && request.time <  timestamp.date(2026, 9, 29) + duration.value(8, 'h')
+        && request.resource.data.keys().hasOnly(['name','grade','section','book','from','to','pages','verified','teacher','ts'])
+        && request.resource.data.keys().hasAll(['name','grade','section','book','from','to','pages','verified','ts'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
+        && request.resource.data.book is string && request.resource.data.book.size() > 0 && request.resource.data.book.size() <= 80
+        && request.resource.data.grade in [7, 8, 9, 10]
+        && request.resource.data.section in ['أ','ب','ج','د','هـ']
+        && request.resource.data.from is int && request.resource.data.from >= 1
+        && request.resource.data.to is int
+        && request.resource.data.pages is int && request.resource.data.pages >= 1 && request.resource.data.pages <= 150
+        && request.resource.data.pages == request.resource.data.to - request.resource.data.from + 1
+        && request.resource.data.verified is bool
+        && (!('teacher' in request.resource.data) || (request.resource.data.teacher is string && request.resource.data.teacher.size() <= 40))
+        && request.resource.data.ts == request.time;
+      allow update, delete: if false;
+    }

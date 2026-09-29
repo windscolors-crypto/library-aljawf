@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ماراثون القراءة | مكتبة إناث الجوفة الإعدادية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EAF0EE;
+    --surface: #FFFFFF;
+    --surface-2: #F4F8F6;
+    --text: #16302B;
+    --muted: #5B716C;
+    --line: #D3DFDB;
+    --green: #2F6B5C;
+    --green-soft: #DCEAE5;
+    --mustard: #D99A1E;
+    --mustard-soft: #F7E8C6;
+    --danger: #B3401F;
+    --ok: #2F6B5C;
+    --shadow: 0 1px 2px rgba(22,48,43,.06), 0 4px 16px rgba(22,48,43,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F1D1A;
+      --surface: #16302B;
+      --surface-2: #1B3832;
+      --text: #E6EFEC;
+      --muted: #9DB5AE;
+      --line: #2A4A43;
+      --green: #6FB8A3;
+      --green-soft: #22453D;
+      --mustard: #E8B04A;
+      --mustard-soft: #3D3320;
+      --danger: #F08A6A;
+      --ok: #6FB8A3;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F1D1A; --surface: #16302B; --surface-2: #1B3832; --text: #E6EFEC; --muted: #9DB5AE;
+    --line: #2A4A43; --green: #6FB8A3; --green-soft: #22453D; --mustard: #E8B04A; --mustard-soft: #3D3320;
+    --danger: #F08A6A; --ok: #6FB8A3; --shadow: none;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  h1, h2, .big-num { font-family: 'Reem Kufi', Tahoma, Arial, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+
+  header { text-align: center; padding: 20px 0 8px; }
+  .school { color: var(--muted); font-size: .9rem; }
+  h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); color: var(--green); line-height: 1.3; }
+  .status {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 8px;
+    padding: 4px 14px; border-radius: 999px; font-size: .9rem; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--line);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .status.live .dot { background: #2FA36B; box-shadow: 0 0 0 4px rgba(47,163,107,.2); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(47,163,107,0); } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px; box-shadow: var(--shadow); margin-top: 16px;
+  }
+  .card h2 { font-size: 1.25rem; color: var(--green); margin-bottom: 12px; }
+
+  .hero { text-align: center; padding: 24px 16px; }
+  .big-num {
+    font-size: clamp(3.4rem, 16vw, 6rem); line-height: 1; color: var(--green);
+    font-variant-numeric: tabular-nums;
+  }
+  .big-label { font-size: 1.15rem; margin-top: 6px; }
+  .big-label b { color: var(--mustard); }
+  .sub-stats { display: flex; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .pill { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; min-width: 120px; }
+  .pill strong { display: block; font-size: 1.5rem; font-family: 'Reem Kufi', Tahoma, Arial, sans-serif; }
+  .pill span { font-size: .85rem; color: var(--muted); }
+
+  form .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .full { grid-column: 1 / -1; }
+  label { display: block; font-size: .9rem; font-weight: 600; margin-bottom: 4px; }
+  input[type=text], input[type=number], select {
+    width: 100%; font: inherit; font-size: 16px; color: var(--text);
+    background: var(--surface-2); border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; min-height: 46px;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--green); }
+  .hint { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+  .pages-out {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: var(--green-soft); border-radius: 10px; padding: 10px 14px; font-weight: 600;
+  }
+  .pages-out b { font-size: 1.4rem; font-family: 'Reem Kufi', Tahoma, Arial, sans-serif; }
+  .pages-out.bad { background: var(--mustard-soft); color: var(--danger); }
+  .check { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--green); flex-shrink: 0; margin-top: 2px; }
+  button.primary {
+    width: 100%; font: inherit; font-weight: 700; font-size: 1.1rem; min-height: 52px;
+    background: var(--green); color: #fff; border: 0; border-radius: 12px; cursor: pointer;
+  }
+  :root[data-theme="dark"] button.primary { color: #0F1D1A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.primary { color: #0F1D1A; } }
+  button.primary:disabled { opacity: .55; cursor: not-allowed; }
+  .msg { min-height: 1.6em; margin-top: 8px; font-weight: 600; text-align: center; }
+  .msg.ok { color: var(--ok); }
+  .msg.err { color: var(--danger); }
+  .returning { font-size: .85rem; color: var(--mustard); font-weight: 600; margin-top: 4px; min-height: 1.3em; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cols .card { margin-top: 16px; }
+
+  .bar-row { display: grid; grid-template-columns: 64px 1fr 56px; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .bar-row .cls { font-weight: 700; }
+  .bar-track { background: var(--surface-2); border-radius: 999px; height: 16px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width .5s ease; }
+  .bar-row:first-child .bar-fill { background: var(--mustard); }
+  .bar-row .val { text-align: left; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  ol.top { list-style: none; }
+  ol.top li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  ol.top li:last-child { border-bottom: 0; }
+  .rank { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--surface-2); flex-shrink: 0; }
+  ol.top li:first-child .rank { background: var(--mustard); color: #fff; }
+  .who { flex: 1; min-width: 0; }
+  .who .n { font-weight: 700; overflow-wrap: anywhere; }
+  .who .c { font-size: .82rem; color: var(--muted); }
+  .score { font-weight: 700; color: var(--green); white-space: nowrap; }
+
+  .log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .log-head h2 { margin: 0; }
+  .log-head select { width: auto; min-height: 40px; padding: 6px 10px; }
+  .log { list-style: none; }
+  .log li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: flex-start; }
+  .log li:last-child { border-bottom: 0; }
+  .log .main { flex: 1; min-width: 0; }
+  .log .n { font-weight: 700; overflow-wrap: anywhere; }
+  .log .meta { font-size: .82rem; color: var(--muted); overflow-wrap: anywhere; }
+  .log .pg { font-weight: 700; color: var(--green); white-space: nowrap; }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--green-soft); color: var(--green); }
+  .empty { color: var(--muted); text-align: center; padding: 12px 0; }
+
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 24px 0 8px; }
+  footer a { color: var(--green); }
+
+  @media (max-width: 640px) {
+    .cols { grid-template-columns: 1fr; gap: 0; }
+    form .grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="school">مكتبة مدرسة إناث الجوفة الإعدادية</div>
+    <h1>📚 ماراثون القراءة</h1>
+    <div id="status" class="status"><span class="dot"></span><span id="statusText">جارٍ التحميل…</span></div>
+  </header>
+
+  <section class="card hero" aria-live="polite">
+    <div class="big-num" id="totalPages">0</div>
+    <div class="big-label"><b>صفحة</b> قرأناها معاً</div>
+    <div class="sub-stats">
+      <div class="pill"><strong id="totalStudents">0</strong><span>طالبة</span></div>
+      <div class="pill"><strong id="totalEntries">0</strong><span>تسجيل</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>✍️ تسجيل قراءة</h2>
+    <form id="entryForm" novalidate autocomplete="off">
+      <div class="grid">
+        <div class="full">
+          <label for="name">اسم الطالبة</label>
+          <input type="text" id="name" maxlength="60" list="nameList" required>
+          <datalist id="nameList"></datalist>
+          <div class="returning" id="returning"></div>
+        </div>
+        <div>
+          <label for="grade">الصف</label>
+          <select id="grade" required>
+            <option value="">—</option>
+            <option value="7">السابع</option>
+            <option value="8">الثامن</option>
+            <option value="9">التاسع</option>
+            <option value="10">العاشر</option>
+          </select>
+        </div>
+        <div>
+          <label for="section">الشعبة</label>
+          <select id="section" required>
+            <option value="">—</option>
+            <option>أ</option><option>ب</option><option>ج</option><option>د</option><option>هـ</option>
+          </select>
+        </div>
+        <div class="full">
+          <label for="book">عنوان الكتاب</label>
+          <input type="text" id="book" maxlength="80" required>
+        </div>
+        <div>
+          <label for="from">من صفحة</label>
+          <input type="number" id="from" inputmode="numeric" min="1" step="1" required>
+        </div>
+        <div>
+          <label for="to">إلى صفحة</label>
+          <input type="number" id="to" inputmode="numeric" min="1" step="1" required>
+        </div>
+        <div class="full">
+          <div class="pages-out" id="pagesOut"><span>عدد الصفحات</span><b id="pagesVal">—</b></div>
+        </div>
+        <div class="full">
+          <label class="check" for="verified">
+            <input type="checkbox" id="verified">
+            <span>سألتُ الطالبة سؤالاً عن آخر ما قرأت</span>
+          </label>
+        </div>
+        <div class="full">
+          <label for="teacher">اسم المعلمة</label>
+          <input type="text" id="teacher" maxlength="40">
+          <div class="hint">يُحفظ على هاتفك فلا تحتاجين كتابته كل مرة.</div>
+        </div>
+        <div class="full">
+          <button type="submit" class="primary" id="submitBtn">حفظ القراءة</button>
+          <div class="msg" id="msg" role="status"></div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <div class="cols">
+    <section class="card">
+      <h2>🏆 ترتيب الصفوف</h2>
+      <div id="classBoard"><div class="empty">لا توجد تسجيلات بعد</div></div>
+    </section>
+    <section class="card">
+      <h2>⭐ أعلى ٥ قارئات</h2>
+      <ol class="top" id="topReaders"><li class="empty">لا توجد تسجيلات بعد</li></ol>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="log-head">
+      <h2>📖 سجل القراءات</h2>
+      <select id="logFilter" aria-label="تصفية حسب الصف">
+        <option value="">كل الصفوف</option>
+        <option value="7">السابع</option>
+        <option value="8">الثامن</option>
+        <option value="9">التاسع</option>
+        <option value="10">العاشر</option>
+      </select>
+    </div>
+    <ul class="log" id="log"><li class="empty">لا توجد تسجيلات بعد</li></ul>
+  </section>
+
+  <footer><a href="../index.html">← العودة إلى موقع المكتبة</a></footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBAoyAzOwKUNgGJ3H8kTp3RC56lVUXTnZs",
+  authDomain: "library-aljawf.firebaseapp.com",
+  projectId: "library-aljawf",
+  storageBucket: "library-aljawf.appspot.com",
+  messagingSenderId: "1098205579668",
+  appId: "1:1098205579668:web:f7a3d3b8c8e8f8a8"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+const COL = collection(db, "marathon_entries");
+
+// Marathon window, Amman time (UTC+3). Must match firestore.rules.
+const MARATHON = { start: "07:30", end: "10:30", openFrom: "07:00", openUntil: "11:00", date: "2026-09-29" };
+const MAX_PAGES = 150;
+const GRADE_NAMES = { 7: "السابع", 8: "الثامن", 9: "التاسع", 10: "العاشر" };
+
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString("ar-EG");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const clean = s => s.replace(/\s+/g, " ").trim();
+// Loose key so "نور  أحمد" and "نور احمد" count as the same student.
+const normName = s => clean(s).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[ً-ْ]/g, "");
+const studentKey = e => `${normName(e.name)}|${e.grade}|${e.section}`;
+const safeGet = k => { try { return localStorage.getItem(k) || ""; } catch { return ""; } };
+const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+// ---------- status pill ----------
+function ammanNow() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Amman", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false
+  }).formatToParts(new Date()).map(x => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
+}
+function updateStatus() {
+  const { date, time } = ammanNow();
+  const el = $("status"), txt = $("statusText");
+  const range = `من ${MARATHON.start} إلى ${MARATHON.end}`;
+  el.classList.remove("live");
+  if (date < MARATHON.date || (date === MARATHON.date && time < MARATHON.start)) txt.textContent = `يبدأ اليوم ${range}`;
+  else if (date === MARATHON.date && time < MARATHON.end) { el.classList.add("live"); txt.textContent = `الماراثون جارٍ الآن · ${range}`; }
+  else txt.textContent = `انتهى الماراثون · شكراً لكل القارئات`;
+}
+updateStatus();
+setInterval(updateStatus, 30000);
+
+// ---------- form ----------
+let entries = [];
+let autoFrom = false; // true while "from" holds a value we suggested
+
+$("teacher").value = safeGet("marathon_teacher");
+
+function readPages() {
+  const f = parseInt($("from").value, 10), t = parseInt($("to").value, 10);
+  if (!Number.isInteger(f) || !Number.isInteger(t)) return null;
+  return { from: f, to: t, pages: t - f + 1 };
+}
+function renderPages() {
+  const r = readPages(), box = $("pagesOut"), v = $("pagesVal");
+  box.classList.remove("bad");
+  if (!r) { v.textContent = "—"; return; }
+  v.textContent = fmt(r.pages);
+  if (r.from < 1 || r.pages <= 0 || r.pages > MAX_PAGES) box.classList.add("bad");
+}
+$("from").addEventListener("input", () => { autoFrom = false; renderPages(); });
+$("to").addEventListener("input", renderPages);
+
+// Returning student: suggest the book and continue from last page + 1.
+function suggestFromHistory() {
+  const name = clean($("name").value), grade = +$("grade").value, section = $("section").value;
+  const hint = $("returning");
+  hint.textContent = "";
+  if (!name || !grade || !section) return;
+  const key = studentKey({ name, grade, section });
+  const mine = entries.filter(e => studentKey(e) === key);
+  if (!mine.length) return;
+  const last = mine[0]; // entries are newest first
+  const total = mine.reduce((s, e) => s + e.pages, 0);
+  hint.textContent = `قرأت حتى الآن ${fmt(total)} صفحة · آخر صفحة: ${fmt(last.to)} من «${last.book}»`;
+  if (!$("book").value) $("book").value = last.book;
+  if (!$("from").value || autoFrom) { $("from").value = last.to + 1; autoFrom = true; renderPages(); }
+}
+["name", "grade", "section"].forEach(id => $(id).addEventListener("change", suggestFromHistory));
+$("name").addEventListener("blur", suggestFromHistory);
+$("grade").addEventListener("change", updateNameList);
+$("section").addEventListener("change", updateNameList);
+
+function updateNameList() {
+  const grade = +$("grade").value, section = $("section").value;
+  const seen = new Map();
+  for (const e of entries) if ((!grade || e.grade === grade) && (!section || e.section === section)) {
+    const k = studentKey(e); if (!seen.has(k)) seen.set(k, e.name);
+  }
+  $("nameList").innerHTML = [...seen.values()].map(n => `<option value="${esc(n)}">`).join("");
+}
+
+function showMsg(text, kind) { const m = $("msg"); m.textContent = text; m.className = "msg " + (kind || ""); }
+
+$("entryForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const name = clean($("name").value);
+  const grade = parseInt($("grade").value, 10);
+  const section = $("section").value;
+  const book = clean($("book").value);
+  const teacher = clean($("teacher").value).slice(0, 40);
+  const r = readPages();
+
+  if (!name) return showMsg("اكتبي اسم الطالبة", "err");
+  if (name.length > 60) return showMsg("الاسم طويل جداً (٦٠ حرفاً كحد أقصى)", "err");
+  if (![7, 8, 9, 10].includes(grade)) return showMsg("اختاري الصف", "err");
+  if (!section) return showMsg("اختاري الشعبة", "err");
+  if (!book) return showMsg("اكتبي عنوان الكتاب", "err");
+  if (book.length > 80) return showMsg("عنوان الكتاب طويل جداً", "err");
+  if (!r) return showMsg("اكتبي رقم «من صفحة» و«إلى صفحة»", "err");
+  if (r.from < 1) return showMsg("«من صفحة» يجب أن يكون ١ أو أكثر", "err");
+  if (r.pages <= 0) return showMsg("«إلى صفحة» يجب أن يكون أكبر من أو يساوي «من صفحة»", "err");
+  if (r.pages > MAX_PAGES) return showMsg(`لا يُقبل أكثر من ${fmt(MAX_PAGES)} صفحة في التسجيل الواحد`, "err");
+
+  const data = { name, grade, section, book, from: r.from, to: r.to, pages: r.pages,
+                 verified: $("verified").checked, ts: serverTimestamp() };
+  if (teacher) data.teacher = teacher;
+  safeSet("marathon_teacher", teacher);
+
+  const btn = $("submitBtn");
+  btn.disabled = true; btn.textContent = "جارٍ الحفظ…"; showMsg("");
+  try {
+    await addDoc(COL, data);
+    showMsg(`✓ حُفظت ${fmt(r.pages)} صفحة لـ ${name}`, "ok");
+    // Ready for the next round: keep class and book, continue from the next page.
+    $("from").value = r.to + 1; autoFrom = true;
+    $("to").value = ""; $("verified").checked = false;
+    renderPages();
+    $("to").focus();
+  } catch (err) {
+    console.error(err);
+    showMsg(err.code === "permission-denied"
+      ? "لم يُحفظ: التسجيل مفتوح فقط وقت الماراثون، أو في البيانات خطأ."
+      : "لم يُحفظ بسبب مشكلة في الاتصال. حاولي مرة أخرى.", "err");
+  } finally {
+    btn.disabled = false; btn.textContent = "حفظ القراءة";
+  }
+});
+
+// ---------- live data ----------
+function render() {
+  const total = entries.reduce((s, e) => s + e.pages, 0);
+  const students = new Map();
+  const classes = new Map();
+  for (const e of entries) {
+    const k = studentKey(e);
+    const s = students.get(k) || { name: e.name, grade: e.grade, section: e.section, pages: 0 };
+    s.pages += e.pages; students.set(k, s);
+    const ck = `${e.grade}|${e.section}`;
+    classes.set(ck, (classes.get(ck) || 0) + e.pages);
+  }
+  $("totalPages").textContent = fmt(total);
+  $("totalStudents").textContent = fmt(students.size);
+  $("totalEntries").textContent = fmt(entries.length);
+
+  const cls = [...classes].sort((a, b) => b[1] - a[1]);
+  const max = cls.length ? cls[0][1] : 1;
+  $("classBoard").innerHTML = cls.length ? cls.map(([k, v]) => {
+    const [g, s] = k.split("|");
+    return `<div class="bar-row"><span class="cls">${esc(g)} ${esc(s)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(3, v / max * 100)}%"></div></div>
+      <span class="val">${fmt(v)}</span></div>`;
+  }).join("") : `<div class="empty">لا توجد تسجيلات بعد</div>`;
+
+  const top = [...students.values()].sort((a, b) => b.pages - a.pages).slice(0, 5);
+  $("topReaders").innerHTML = top.length ? top.map((s, i) => `<li>
+      <span class="rank">${fmt(i + 1)}</span>
+      <div class="who"><div class="n">${esc(s.name)}</div><div class="c">الصف ${esc(GRADE_NAMES[s.grade] || s.grade)} · شعبة ${esc(s.section)}</div></div>
+      <span class="score">${fmt(s.pages)} صفحة</span></li>`).join("")
+    : `<li class="empty">لا توجد تسجيلات بعد</li>`;
+
+  renderLog();
+  updateNameList();
+}
+
+function renderLog() {
+  const g = +$("logFilter").value;
+  const list = entries.filter(e => !g || e.grade === g).slice(0, 150);
+  $("log").innerHTML = list.length ? list.map(e => {
+    const t = e.ts ? e.ts.toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Amman" }) : "الآن";
+    return `<li><div class="main">
+        <div class="n">${esc(e.name)} <span class="meta">· ${esc(e.grade)} ${esc(e.section)}</span> ${e.verified ? '<span class="tag">✓ سُئلت</span>' : ""}</div>
+        <div class="meta">«${esc(e.book)}» ص ${fmt(e.from)}–${fmt(e.to)} · ${esc(t)}${e.teacher ? " · " + esc(e.teacher) : ""}</div>
+      </div><span class="pg">+${fmt(e.pages)}</span></li>`;
+  }).join("") : `<li class="empty">لا توجد تسجيلات${g ? " لهذا الصف" : ""} بعد</li>`;
+}
+$("logFilter").addEventListener("change", renderLog);
+
+onSnapshot(COL, snap => {
+  entries = snap.docs.map(d => {
+    const x = d.data({ serverTimestamps: "estimate" });
+    return {
+      name: String(x.name || ""), grade: Number(x.grade), section: String(x.section || ""),
+      book: String(x.book || ""), from: Number(x.from) || 0, to: Number(x.to) || 0,
+      pages: Number(x.pages) || 0, verified: !!x.verified, teacher: x.teacher ? String(x.teacher) : "",
+      ts: x.ts && x.ts.toDate ? x.ts.toDate() : null
+    };
+  }).sort((a, b) => (b.ts ? b.ts.getTime() : Infinity) - (a.ts ? a.ts.getTime() : Infinity) || 0);
+  render();
+}, err => {
+  console.error(err);
+  showMsg(err.code === "permission-denied"
+    ? "تعذّر عرض النتائج: قاعدة Firestore للماراثون لم تُفعَّل بعد."
+    : "تعذّر الاتصال بقاعدة البيانات.", "err");
+});
+</script>
+</body>
+</html>
